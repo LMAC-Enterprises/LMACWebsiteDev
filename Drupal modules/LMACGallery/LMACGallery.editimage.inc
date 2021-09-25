@@ -57,8 +57,15 @@ function LMACGallery_admin_addImage_form($form, &$form_state) {
 		'#type' => 'textfield',
 		'#title' => t('Image Url'),
 		'#description' => t('The Url of the single image.'),
-		'#default_value' => $imageDefaults['url'],
+		'#default_value' => $imageDefaults['url']
 	);
+	
+	if (! empty($imageDefaults['url'])) {
+		$form['url_preview'] = array(
+			'#type' => 'markup',
+			'#markup' => '<div class="lmacg_edit-image-url-preview-box"><img src="https://images.hive.blog/300x0/'. $imageDefaults['url']  . '" /></div>',
+		);
+	}
 	
 	$form['author'] = array(
 		'#type' => 'textfield',
@@ -85,10 +92,12 @@ function LMACGallery_admin_addImage_form($form, &$form_state) {
 }
  
 function LMACGallery_admin_addImageForm_submit($form, &$form_state) {
-
-	$form_state['args'] = array(_LMACGallery_admin_saveImage($form_state['values']));
- 
 	drupal_set_message(t('Image saved.'));
+	$oldImageId = isset($form_state['values']['imageId']) ? $form_state['values']['imageId'] : 0;
+	$newImageId = _LMACGallery_admin_saveImage($form_state['values']);	
+	if ($newImageId != $oldImageId) {
+		drupal_goto('admin/lmac/lmacg-edit-image/' . $newImageId);
+	}
 }
 
 function _LMACGallery_admin_saveImage($image) {
