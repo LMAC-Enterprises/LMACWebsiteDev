@@ -1,0 +1,16 @@
+#edit-picked-images .form-type-checkbox {
+	display: inline-block;
+	border: 1px solid black;
+	width: 120px;
+	height: 115px;
+	overflow: hidden;
+}
+
+#edit-unpick-checked {
+	margin-top: 15px;
+}
+
+#edit-markdown-rendered-preview {
+	border: 1px solid #ccc;
+	padding: 5px !important;
+}

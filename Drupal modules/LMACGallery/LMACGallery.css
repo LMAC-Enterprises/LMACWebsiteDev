@@ -1,0 +1,138 @@
+.lmacg_flowContainer {
+	border-bottom: 1px solid #121212;
+	margin: 0 auto;
+	width: auto;
+}
+ 
+
+.lmacg_thumbnailFooter {
+	text-align: center;
+	color: #121212;
+	background-color: #ececec;
+}
+
+.lmacg_thumbnail {
+	margin-right: 10px;
+	display: inline-block;
+	width: 300px;
+	height: 200px;
+ 
+	background-color: #121212;
+	overflow: hidden;
+}
+
+.lmacg_thumbnail img {
+	width: 300px;
+	max-width: 300px;
+	margin: 0;
+	padding: 0;
+}
+
+.lmacg_pagination {
+	text-align: center;
+}
+
+#lmacg_modalImageLayer {
+    position: fixed;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0.25, 0.75);
+	z-index: 255;
+	display: none; 
+	transition: visibility 0s linear 0.25s, opacity 0.25s 0s, transform 0.25s;
+}
+
+#lmacg_imageContainer {
+	margin: 25px auto 0px;
+	width: auto;
+	height: auto;
+	max-width: 85%;
+	max-height: 85%;
+	min-height: 70%;
+	background-color: black;
+	vertical-align: middle;
+}
+
+#lmacg_modalImageLayer img {
+	top: 25%; 
+    position: relative;
+	display: block;	
+	margin: 0 auto;	
+	max-width: 100%;
+	max-height: 700px;
+}
+
+#lmacg_dataContainer {
+	background-color: #121212;	
+	max-width: 85%;
+	margin: 0 auto;
+}
+
+#lmacg_dataContainer table {
+	color: #ececec;
+	border: none;
+	width: auto;
+	margin: 0 auto;
+	padding: 0;	
+}
+
+#lmacg_dataContainer table > tbody {
+	border: none;
+}
+
+.onePix{
+	width: 1px;
+	height: 1px;
+}
+
+.lmacg_thumbnailFiveStar {
+	position: absolute;
+	padding: 5px;
+	text-align: center;
+	color: #121212;
+	background-color: rgba(0.2, 0.2, 0.2, 0.25);
+	opacity: 0.75;
+}
+
+.lmacg_thumbnailFiveStar > .lmacg_currationPostLink {
+	color: red !important;
+	font-size: 16px;
+	margin-right: 5px;
+	padding-right: 3px;
+	padding-left: 3px;
+	background-color: white;
+}
+
+.lmacg_thumbnailFiveStar > .lmacg_currationPostLink.selected {
+	color: green !important;
+	font-size: 16px;
+	margin-right: 5px;
+	padding-right: 3px;
+	padding-left: 3px;
+	background-color: white;
+}
+
+.lmacg_fivestar  {
+	color: #ffffff !important;
+	font-size: 16px;
+}
+
+.lmacg_thumbnailFiveStar > span {
+	color: #ffffff !important;
+	font-size: 16px;
+}
+
+.lmacg_editImageLink {
+	color: #ffffff !important;
+	font-size: 16px;
+}
+
+#lmacgallery-search-form .form-item {
+	display: inline;
+}
+
+#lmacgallery-search-form .form-text {
+	max-width: 220px;
+}

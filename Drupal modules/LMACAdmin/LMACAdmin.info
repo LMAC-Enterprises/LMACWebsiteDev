@@ -1,0 +1,5 @@
+name = LMAC Administration
+description = The base module for all LMAC modules to be administered.
+core = 7.x
+configure = admin/lmac
+package = LMAC

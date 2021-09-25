@@ -1,0 +1,5 @@
+name = LMAC LIL Post Checker
+description = Provide a tool to check LIL Hive posts to verify whether they are readable by the bot and provide hints.
+core = 7.x
+package = LMAC
+dependencies[] = LMACAdmin

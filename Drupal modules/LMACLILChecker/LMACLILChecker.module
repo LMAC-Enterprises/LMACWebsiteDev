@@ -1,0 +1,68 @@
+<?php
+/**
+ * Implements hook_menu()
+ */
+function LMACLILChecker_menu() {
+    $items = array();
+	$items['lmac-lilchecker'] = array(
+		'title'             =>  t('LIL Post checker'),
+		'description'       =>  t('Check whether a Hive post can be read by the LIL bot to be indexed for the gallery.'),
+		'page callback' 	=> 'drupal_get_form',
+		'page arguments' 	=> array('LMACLILChecker_form'),
+		'access callback'   =>  true,
+	);	
+	return $items;
+}
+
+function LMACLILChecker_form($form, &$form_state) {
+	
+	$form['title_description'] = array(
+		'#type'	=> 'item',
+		'#description' => t('Whenever you are not sure if you have used the table template for the LIL posts correctly, you can use this tool to detect errors in LIL table(s) of your post markdown.'), 
+	);
+	
+	$form['hive_post'] = array(
+		'#type'	=> 'textarea',
+		'#title' => t('Hive post:'),
+		'#description' => t('Paste your LIL Hive post into this field.'),
+		'#required' => TRUE,
+		'#rows' => 10,
+		'#attributes' => array('placeholder'=>array('What you see here is just a placeholder! 
+Please paste your fancy LIL Hive post markup into this field.
+		
+<table class="lil">
+	<tr>
+		<td class="lil-title">Night butterfly</td>
+		<td class="lil-tags">butterfly,  moth, caligo, insect, flying insect, lepidoptera</td>
+		<td class="lil-image"><img src="https://images.hive.blog/DQmTM1LmiiMFy8mDdFdF94iEcaFyfuaiGXw3qHHAAFMq18K/IMG_20201008_135625.jpg" width="500"/></td>
+	</tr>
+	<tr>
+		<td class="lil-title">Praying mantis</td>
+		<td class="lil-tags">mantis, insect, mantidae</td>
+		<td class="lil-image"><img src="https://images.hive.blog/DQmZCP8jksFqVuztMb84yL6KqDYTC8aJowM7LkHTpdvXpa2/IMG_20201109_113230.jpg" width="500"/></td>
+	</tr>
+</table>
+
+Another fantastic text here!'))
+	);
+	
+	$form['submit_to_check'] = array(
+		'#type'	=> 'submit',
+		'#value' => t('Check'),
+	);
+	
+	$form['console'] = array(
+		'#type'	=> 'item',
+		'#title' => t('Result:'),
+		'#description' => t('This is what the LIL Index bot will see when it looks into your post.'),
+		'#markup' => '<div id="LMACLILChecker-console"></div>'
+	);
+
+	$form['#attached']['js'] = array(
+		drupal_get_path('module', 'LMACLILChecker') . '/LMACLILChecker.js',
+	);
+	$form['#attached']['css'] = array(
+		drupal_get_path('module', 'LMACLILChecker') . '/LMACLILChecker.css',
+	);
+	return $form;
+}

@@ -1,0 +1,6 @@
+name = LMAC Image Index Gallery
+description = The gallery of the LMAC Image Gallery.
+core = 7.x
+package = LMAC
+dependencies[] = LMACAdmin
+configure = admin/lmac/config

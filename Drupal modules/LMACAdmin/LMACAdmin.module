@@ -1,0 +1,90 @@
+<?php
+
+/**
+ * Implements hook_menu().
+ */
+function LMACAdmin_menu() {
+	
+	$items = array();
+	
+	$items['admin/lmac'] = array(
+		'title' 			=> t('LMAC Administration'),
+		'description'       => t('Administer the LMAC modules'), 
+		'page callback' 	=> 'LMACAdmin_adminLinksPage',
+		'access arguments' 	=> array('administer lmac')
+	);
+	
+	return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function LMACAdmin_permission() {
+
+	return array(
+		'administer lmac' => array(
+		  'title' => t('Administer LMAC modules'),
+		),
+	);
+}
+
+/**
+ * The page callback for the admin link list.
+ */
+function LMACAdmin_adminLinksPage() {
+	$links = _LMACAdmin_getLinks();
+	
+	$menuLinks = [];
+	foreach($links as $link) {
+		 
+		if (! array_key_exists('attributes', $link['options'])) {
+			continue;
+		}
+ 
+		$linkId = str_replace('/', '_', $link['router_path']);
+		$menuLinks[$linkId] = array(
+			'#type'		=> 'link',
+			'#title'	=> $link['link_title'],
+			'#href'		=> $link['router_path'],
+			'#prefix'	=> '<li class="leaf">',
+			'#suffix'	=> '<br/><div class="description">' . $link['options']['attributes']['title'] . '</div></li>'
+			
+		);
+		
+	}
+		
+	return array(
+		'lmacadmin_admin_links_title' => array(
+			'#type'   => 'item',
+			'#markup' => t('LMAC Admin links'),
+			'#prefix' => '<h2>',
+			'#suffix' => '</h2>',
+		),
+		'lmacadmin_admin_links' => array(
+			'#prefix' => '<ul class="admin-list">',
+			'#suffix' => '</ul>',
+			'links' => $menuLinks
+		)
+	);
+}
+
+/**
+ * Retrieves a list of 
+ */
+function _LMACAdmin_getLinks() {
+	$links = db_select('menu_links', 'ml', array(
+		'fetch' => PDO::FETCH_ASSOC,
+	))
+	->fields('ml')
+	->condition('ml.router_path', 'admin/lmac/%', 'LIKE')
+	->orderBy('weight')
+	->execute()
+	->fetchAll();
+	foreach ($links as &$link) {
+		$link['options'] = unserialize($link['options']);
+	}
+
+	return $links;
+}
+

@@ -1,0 +1,374 @@
+<?php
+/**
+ * @file
+ * Controls the LMAC gallery.
+ * @author
+ * QuantumG
+ */
+
+const TRUNCATE_DOTS = '...';
+const MAX_IMAGE_TITLE_LENGTH = 36;
+
+/**
+ * Implements hook_menu()
+ */
+function LMACGallery_menu() {
+    $items = array();
+	$items['lmac_gallery'] = array(
+		'title'             =>  t('Gallery'),
+		'description'       =>  t('Show the images of the LMAC Image Gallery'),
+		'page callback' 	=> 'LMACGallery_page',
+		'access callback'   =>  true,
+	);	
+	$items['lmac_gallery/%'] = array(
+		'title'             =>  t('Gallery'),
+		'description'       =>  t('Show the images of the LMAC Image Gallery'),
+		'page callback' 	=> 'LMACGallery_page',
+		'page arguments' 	=> array(1),
+		'access callback'   =>  true,
+	);
+ 	
+	$items['admin/lmac/config'] = array(
+		'title' 			=> t('Configure LMAC Gallery'),
+		'description'       => t('Configure the behaviour of the gallery page and block image urls from being listed there.'), 
+		'page callback' 	=> 'drupal_get_form',
+		'page arguments' 	=> array('LMACGallery_admin_configuration_form'),
+		'access arguments' 	=> array('administer lmac_gallery'),
+		'file' 				=> 'LMACGallery.admin.inc',
+ 
+	);
+	$items['admin/lmac/lmacg-curation'] = array(
+		'title' 			=> t('Curation Post Helper'),
+		'description'       => t('Manage ratings and create Top lists for Hive posts.'), 
+		'page callback' 	=> 'drupal_get_form',
+		'page arguments' 	=> array('LMACGallery_admin_curation_form'),
+		'access arguments' 	=> array('administer lmac_gallery'),
+		'file' 				=> 'LMACGallery.curation.inc',
+	);
+	$items['admin/lmac/lmacg-unrated'] = array(
+		'title' 			=> t('Still unrated images'),
+		'description'       => t('Shows a table with all unrated images.'), 
+		'page callback' 	=> 'drupal_get_form',
+		'page arguments' 	=> array('LMACGallery_admin_unrated_form'),
+		'access arguments' 	=> array('administer lmac_gallery'),
+		'file' 				=> 'LMACGallery.unrated.inc',
+	);
+	$items['admin/lmac/lmacg-edit-image'] = array(
+		'title' 			=> t('New image'),
+		'description'       => t('Add a new image manually to the LIL.'), 
+		'page callback' 	=> 'drupal_get_form',
+		'page arguments' 	=> array('LMACGallery_admin_addImage_form'),
+		'access arguments' 	=> array('administer lmac_gallery'),
+		'file' 				=> 'LMACGallery.editimage.inc',
+	);
+	$items['admin/lmac/lmacg-edit-image/%'] = array(
+		'page callback' 	=> 'drupal_get_form',
+		'page arguments' 	=> array('LMACGallery_admin_addImage_form', 3),
+		'access arguments' 	=> array('administer lmac_gallery'),
+		'file' 				=> 'LMACGallery.editimage.inc'
+	);
+	$items['admin/lmac/lmacg-curation/preview_markdown'] = array(
+		'page callback' 	=> 'drupal_get_form',
+		'page arguments' 	=> array('LMACGallery_previewMarkdown_form'),
+		'access arguments' 	=> array('administer lmac_gallery'),
+		'file' 				=> 'LMACGallery.curation.inc'
+	);
+	$items['ajax/lmac_gallery/%/%/%'] = array(
+		'page callback' 	=> 'LMACGallery_ajax_fiveStarCallback',
+		'page arguments' 	=> array(2, 3, 4),
+		'access arguments' 	=> array('administer lmac_gallery'),
+		'file' 				=> 'LMACGallery.ajax.inc',
+	);
+	$items['ajax/lmac_gallery-curate/%'] = array(
+		'page callback' 	=> 'LMACGallery_ajax_curationPickCallback',
+		'page arguments' 	=> array(2),
+		'access arguments' 	=> array('administer lmac_gallery'),
+		'file' 				=> 'LMACGallery.ajax.inc',
+	);
+     return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function LMACGallery_permission() {
+  return array(
+    'administer lmac_gallery' => array(
+      'title' => t('Administer LMAC Gallery'),
+    ),
+  );
+}
+
+/**
+ * Implements hook_theme()
+ */
+function LMACGallery_theme() {
+ 
+	$themes = array();
+	$themes['gallery_page'] = array(
+		'template' => 'gallery-page',
+		'path' => drupal_get_path('module', 'LMACGallery'),
+	);
+    return $themes;
+}
+
+/**
+ * Implements hook_schema().
+ */
+function LMACGallery_schema() {
+	
+	$schema['lmacg_ratings'] = array(
+		'description' => 'Table to keep rating for a node',
+ 
+		'fields' => array(
+			'ratingid' => array(
+				'description' => 'The primary identifier for a rating.',
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'imageid' => array(
+				'description' => 'The foreign key for an image.',
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+				'score' => array(
+				'description' => 'Rating for an image.',
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0,
+			),
+				'uid' => array(
+				'description' => 'The foreign key for an user.',
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0,
+			),
+		),
+		'foreign keys' => array(
+		  'images' => array(
+			'table' => 'images',
+			'columns' => array(
+			  'imageid' => 'imageid',
+			),
+		  ),
+		  'users' => array(
+			'table' => 'users',
+			'columns' => array(
+			  'uid' => 'uid',
+			),
+		  ),
+		),
+		'primary key' => array(
+			'ratingid',
+		),
+	);
+	return $schema;
+}
+
+/**
+ * Form callback for the search form.
+ */
+function LMACGallery_search_form($form, &$form_state){
+ 
+    $form['page_welcome'] = array(
+        '#type' => 'item',
+        '#markup' => t('In this gallery you will find images that Hive users have diligently contributed to the LMAC Image Library.  Some images probably could not be read by the bot. If you can\'t find your images here, check the respective Hive posts for errors with the LIL Checker tool.'),
+		'#prefix' => '<p>',
+		'#suffix' => '</p>'
+    );
+	
+    $form['sq'] = array(
+        '#type' => 'textfield',
+        '#title' => t('Search'),
+        '#size' => 50,
+        '#maxlength' => 200,
+        '#required' => FALSE
+    );
+    
+    $form['submit'] = array(
+        '#type' 	=> 'button',
+        '#value' 	=> t('Search')
+    );
+	
+	$form['description'] = array(
+		'#type' => 'item',
+		'#description' => t('Enter one or more keywords you want to search for images. In example: car, clouds'),
+ 
+	);
+ 
+	$form['#rebuild'] = TRUE;
+    
+    return $form;
+}
+/**
+ * Implements hook_FORM_alter for altering the search form.
+ */
+function LMACGallery_form_LMACGallery_search_form_alter(&$form, $form_state, $form_id)  {
+	if ($form_id != 'LMACGallery_search_form') {
+		return;
+	}
+	
+	if (isset($_GET['q']) && strpos($_GET['q'], 'lmac_gallery/') === 0) {
+		$keywordsFallback = explode('/', $_GET['q'])[1];
+	}else{
+		$keywordsFallback = '';
+	}
+	
+	$form['sq']['#default_value'] = isset($_GET['sq']) ? $_GET['sq'] : $keywordsFallback;
+  }
+  
+/**
+ * Page callback
+ *
+ * @param $q
+ *   Search query. Can be empty.
+  * @param $pageNo
+ *   Number of the page.
+ *
+ * @return
+ *   The page content.
+ */
+function LMACGallery_page($q="", $pageNo=0) {
+	drupal_add_js(drupal_get_path('module', 'LMACGallery').'/LMACGallery.js');
+	drupal_add_css(drupal_get_path('module', 'LMACGallery').'/LMACGallery.css');
+	drupal_add_js(array('LMACGallery' => array('dapp' => variable_get('LMACGallery_dapp', 'https://hive.blog/'))), array('type' => 'setting'));
+	
+	$images = _LMACGallery_getImages(_LMACGallery_getSearchQueryFragments($q));
+	$chunks = array_chunk($images, 29, TRUE);
+	$previousPageUrl = '/lmac_gallery/' . $q . '/'. ($pageNo - 1);
+	$nextPageUrl = '/lmac_gallery/' .  $q . '/'. ($pageNo + 1);
+	
+	return array(
+		'searchForm' => drupal_get_form('LMACGallery_search_form'),
+		'gallery' => array(
+			'#markup'=>count($chunks) > 0 ? theme('gallery_page', array('handPicked'=>variable_get('LMACGallery_curationPicks', array()),'images'=>$chunks[$pageNo], 'pageNo'=>$pageNo, 'pagesTotal'=>count($chunks), 'previousPageUrl'=>$previousPageUrl, 'nextPageUrl'=>$nextPageUrl, 'imagesJson'=>_LMACGallery_createImagesJson($chunks[$pageNo]))) : t('No images found.')
+		)
+	);
+}
+
+/**
+ * Retrieves the cache Id for a specific search input.
+ *
+ * @param $searchInputFragments
+ *		The search query input
+ *
+ * @return
+ *   The cache Id.
+ */
+function _LMACGallery_getCacheId($searchInputFragments) {
+
+	return 'LMACGallery_'.	preg_replace('[^a-z0-9-]', '', $searchInputFragments);
+}
+
+/**
+ * Creates json from an array of image entities.
+ *
+ * @param $images
+ *		The image array.
+ *
+ * @return
+ *   Json code.
+ */
+function _LMACGallery_createImagesJson($images) {
+	
+	$imagesDict = [];
+	
+	foreach ($images as $image) {
+		$imagesDict[$image['imageid']] = $image;
+	}
+	
+	return drupal_json_encode($imagesDict);
+}
+
+/**
+ * Retrieves images from the database due to a specific search input.
+ *
+ * @param $searchInputFragments
+ *		The search query input. Example: dog cat animal
+ *
+ * @return
+ *   An array of image entities.
+ */
+function _LMACGallery_getImages($searchInputFragments) {
+	
+	$imageUrlHideList = variable_get('LMACGallery_hideList', array());
+	
+	$cacheId = _LMACGallery_getCacheId($searchInputFragments); 
+	$cache = cache_get($cacheId);
+	$cachedSearchResults = [];
+	if (! $cache) {
+ 
+		$query = db_select("images", "li");
+		$query->addField("li", "imageid");
+		$query->addField("li", "title");
+		$query->addField("li", "tags");
+		$query->addField("li", "url");
+		$query->addField("li", "permlink");
+		$query->addField("li", "author");
+		$query->addExpression('(SELECT AVG(score) FROM lmacg_ratings as lr WHERE lr.imageid=li.imageid)', 'ratingscore');
+ 
+ 
+		if (! empty(trim($searchInputFragments))) {
+			_LMACGallery_dbFetchImagesByTags($query, $searchInputFragments);
+		}
+	 
+		$query->orderBy('ratingscore', 'DESC');
+
+		$result = $query->execute();
+			 
+		while ($row = $result->fetchAssoc()) {
+			
+			if (in_array($row['url'], $imageUrlHideList)) {
+				continue;
+			}
+			$row['cid'] = $cacheId;
+			$row['thumbnailUrl'] = 'https://images.hive.blog/300x0/' . str_replace('https://images.hive.blog/0x0/"', '', $row['url']);			
+			$row['truncatedTitle'] = (strlen($row['title']) > MAX_IMAGE_TITLE_LENGTH) ? substr($row['title'], 0, MAX_IMAGE_TITLE_LENGTH - strlen(TRUNCATE_DOTS)) . TRUNCATE_DOTS : $row['title'];
+			$cachedSearchResults[] = $row;		  
+		}
+ 
+		
+		cache_set($cacheId, $cachedSearchResults);
+	}else{
+		$cachedSearchResults = $cache->data;
+	}
+ 
+	
+ 
+	return $cachedSearchResults;
+}
+
+/**
+ * Converts a search query string into a parsed array of search terms.
+ *
+ * @param $searchQuery
+ *		The search query.
+ *
+ * @return
+ *   An array of search terms.
+ */
+function _LMACGallery_getSearchQueryFragments($searchQuery) {
+ 	
+	$searchQuery = trim($searchQuery);
+	
+	return implode(' ', array_diff(explode(',', str_replace(array(',', '-', '+', ' ', '	'), ',', $searchQuery)), array('')));
+}
+
+/**
+ * Adds a fulltext search to a DB query.
+ *
+ * @param $query
+ *   A Drupal database query.
+  * @param $urlSearchQuery
+ *   The search query input. Example: dog cat animal
+ *
+ * @return
+ *   Nothing
+ */
+function _LMACGallery_dbFetchImagesByTags($query, $urlSearchQuery) {
+ 
+	$expression = 'MATCH(tags) AGAINST (:search IN BOOLEAN MODE)';
+	$query->where($expression, [':search' => _LMACGallery_getSearchQueryFragments($urlSearchQuery)]);
+}
