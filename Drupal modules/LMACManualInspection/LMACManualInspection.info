@@ -1,0 +1,7 @@
+name = LMAC Manual Inspection
+description = Provides a moderation page for LIL entries which couldn't read by the index bot.
+core = 7.x
+configure = admin/lmac
+package = LMAC
+dependencies[] = LMACAdmin
+configure = admin/lmac/manual-inspection

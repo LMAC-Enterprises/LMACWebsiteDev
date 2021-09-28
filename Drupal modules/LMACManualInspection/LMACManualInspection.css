@@ -1,0 +1,15 @@
+.lmac-manual-inspection-row {
+		
+}
+
+.lmac-manual-inspection-row.status-unseen {
+	background-color: #ff9191;	
+}
+
+.lmac-manual-inspection-row.status-inreview {
+	background-color: lightgreen;	
+}
+
+.lmac-manual-inspection-row.status-unsolvable {
+	background-color: Yellow;	
+}

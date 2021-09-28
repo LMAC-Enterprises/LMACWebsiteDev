@@ -1,0 +1,200 @@
+<?php
+
+const LMACMANUALINSPECTION_STATUS_UNSEEN = 0;
+const LMACMANUALINSPECTION_STATUS_INREVIEW = 1;
+const LMACMANUALINSPECTION_STATUS_UNSOLVABLE = 2;
+const LMACMANUALINSPECTION_STATUS_SOLVED = 3;
+const LMACMANUALINSPECTION_STATUS_OPTIONS = array(
+	'Unseen',
+	'In review',
+	'Unsolvable'
+);
+
+/**
+ * Implements hook_menu().
+ */
+function LMACManualInspection_menu() {
+	
+	$items = array();
+	
+	$items['admin/lmac/manual-inspection'] = array(
+		'title' 			=> t('LMAC Manual Inspection'),
+		'description'       => t('Moderation page for LIL entries which couldn\'t read by the index bot. Should be checked frequently!'), 
+		'page callback' 	=> 'LMACManualInspection_page',
+		'access arguments' 	=> array('administer lmac')
+	);
+	$items['ajax/manual-inspection/status-change'] = array(
+		'page callback' 	=> 'LMACManualInspection_ajax_statusChangeCallback',
+		'access arguments' 	=> array('administer lmac'),
+	);
+	
+	return $items;
+}
+
+/**
+ * AJAX callback for changing the status of a specific manual inspection entry.
+ */
+function LMACManualInspection_ajax_statusChangeCallback() {
+ 
+	$rawLink = $_POST['link'];
+	$status = $_POST['status'];
+	
+	_LMACManualInspection_changeInspectionEntryStatus($rawLink, $status);
+}
+
+/**
+ * The page callback of the manual inspection moderation page.
+ */
+function LMACManualInspection_page() {
+	
+	if (isset($_GET['mode']) && $_GET['mode'] == 'status') {
+ 
+		_LMACManualInspection_changeInspectionEntryStatus($_GET['link'], $_GET['status']);
+	}
+	
+	$manualInspectionEntries = _LMACManualInspection_loadManualInspectionEntries();
+ 
+	$headers = array(
+		'link' => array('data' => t('Link'), 'field' => 'link'),
+		'author' => array('data' => t('Author'), 'field' => 'author'),
+		'date' => array('data' => t('Noticed'), 'field' => 'date'),
+		'status' => array('data' => t('Status'), 'field' => 'status')
+	);
+ 
+	$renderArray = array(
+		'header_item' => array(
+			'#type' => 'item',
+			'#description' => t('The entries in the table below couldn\'t be read by the index bot. Please review the post and contact the author about what went wrong and what the author can do.')
+		),
+		'status_legend' => array(
+			'#theme' => 'item_list',
+			'#title' => t('Status modes:'),
+			'#items' => array(
+				t('Unseen - No moderator has reacted to this status yet.'),
+				t('In review - You or another moderator has already reacted to this status and is looking for a solution.'),
+				t(' Unsolvable - No solution could be found by a moderator. '),
+				t('Solved - A solution could be found. The entry is deleted by setting this status and the bot can index it again.'),
+			)
+		),
+		'table' => array(
+			'#markup' => theme('table', array(
+			'header' => $headers,
+			'rows' => $manualInspectionEntries,
+			'attributes' => array('class' => array('lmac-manual-inspection-table')),
+			'#empty' =>t('No posts available for manual inspection.'),
+		))
+	));
+	
+	$renderArray['#attached']['js'] = array(
+	  drupal_get_path('module', 'LMACManualInspection') . '/LMACManualInspection.js',
+	);
+	$renderArray['#attached']['css'] = array(
+	  drupal_get_path('module', 'LMACManualInspection') . '/LMACManualInspection.css',
+	);
+	
+	return $renderArray;
+}
+
+/**
+ * Loads all manual inspection entries.
+ * @return An array of manual inspection entries.
+ */
+function _LMACManualInspection_loadManualInspectionEntries() {
+ 
+	db_set_active('lil');
+	$entries = db_select('manual_inspection', 'mi', array(
+		'fetch' => PDO::FETCH_ASSOC,
+	))
+	->fields('mi')
+	->orderBy('noticed')
+	->execute()
+	->fetchAll();
+	db_set_active();
+	
+	$tableDataRows = [];
+	
+	$rowCount = 0;
+	foreach ($entries as $entry) {
+		$rowId = 'lmac-manual-inspection-row-' . $rowCount;
+		$tableDataRow = [];
+		$tableDataRow['link'] = _LMACManualInspection_getHivePostLinkCellContent($entry['link']);
+		$tableDataRow['author'] = _LMACManualInspection_getHiveAuthorLinkCellContent($entry['link']);
+		$tableDataRow['date'] = format_date($entry['noticed'], 'long');
+		$tableDataRow['status'] = _LMACManualInspection_getStatusCellContent($entry['status'], $entry['link'], $rowId);
+		$classes = array('lmac-manual-inspection-row');
+ 
+		switch($entry['status']) {
+			case LMACMANUALINSPECTION_STATUS_UNSEEN:
+				$classes[] = 'status-unseen';
+				break;
+			case LMACMANUALINSPECTION_STATUS_INREVIEW:
+				$classes[] = 'status-inreview';
+				break;
+			case LMACMANUALINSPECTION_STATUS_UNSOLVABLE:
+				$classes[] = 'status-unsolvable';
+				break;
+		}
+		
+		$tableDataRows[$rowId] = array('data'=>$tableDataRow, 'class' => $classes, 'id'=>array("{$rowId}"));
+		$rowCount++;
+	}
+	
+	return $tableDataRows;
+}
+
+/**
+ *
+ */
+function _LMACManualInspection_changeInspectionEntryStatus($rawLink, $status) {
+
+	db_set_active('lil');
+	db_update('manual_inspection')
+	->fields(array(
+	'status' => $status,
+	))
+	->condition('link', $rawLink)
+	->condition('status', LMACMANUALINSPECTION_STATUS_SOLVED, '<>')
+	->execute();
+	db_set_active();
+}
+
+function _LMACManualInspection_getStatusCellContent($currentStatus, $rawLink, $rowId) {
+	$select = array(
+			'#type'  => 'select',
+			'#value' => $currentStatus,
+			'#attributes' => array('class'=>array('lmac-manual-inspection-status'), 'data-link'=>array($rawLink), 'data-rowid'=>array($rowId)),
+			'#options' => array(
+				LMACMANUALINSPECTION_STATUS_UNSEEN => t('Unseen'),
+				LMACMANUALINSPECTION_STATUS_INREVIEW => t('In review'),
+				LMACMANUALINSPECTION_STATUS_UNSOLVABLE => t('Unsolvable'),
+				LMACMANUALINSPECTION_STATUS_SOLVED => t('Solved'),
+			)
+		);
+	
+	return drupal_render($select);
+}
+
+function _LMACManualInspection_getHivePostLinkCellContent($rawLink) {
+	
+	$linklist = array(
+		'item1' => array( 'title' => 'Open in PeakD', 'href' => 'https://peakd.com/' . $rawLink, 'attributes'=>array('target'=>'_blank')),
+		'item2' => array( 'title' => 'Open in Hive.blog', 'href' => 'https://hive.blog/' . $rawLink, 'attributes'=>array('target'=>'_blank')),
+		'item3' => array( 'title' => 'Open in Block Explorer', 'href' => 'https://hiveblocks.com/' . $rawLink, 'attributes'=>array('target'=>'_blank')),
+	);
+	
+	return theme('links', array(
+	  'links' => $linklist,
+	  'attributes' => array('class' => array('links', 'inline'))));   
+}
+
+function _LMACManualInspection_getHiveAuthorLinkCellContent($rawPostLink) {
+	
+	$hit = [];
+	$name = t('Unknown');
+	$match = preg_match('/(@[a-zA-Z0-9_]+)/m', $rawPostLink, $hit);
+	if ($match) {
+		$name = $hit[0];
+	}	
+	return $name;
+}
+ 
