@@ -1,3 +1,14 @@
 .fake-admin-list > li {
 	padding-bottom: 10px;
 }
+
+#edit-hidelist-items > .form-type-checkbox {
+	display: inline-block;
+}
+
+#edit-hidelist-items > .form-type-checkbox > input[type=checkbox] {
+	height: 86px;
+	display: inline-block;
+	vertical-align: top;
+	background-color: #c0c0c0;
+}

@@ -9,6 +9,8 @@
  
  function LMACGallery_admin_configuration_form($form, &$form_state) {
 
+	$form['#attached']['css'][] = drupal_get_path('module', 'LMACGallery').'/LMACGallery.admin.css';
+ 
 	$form['hidegroup'] = array(
 		'#type' => 'fieldset',
 		'#title' => t('Hide list'),

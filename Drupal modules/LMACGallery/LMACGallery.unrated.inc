@@ -58,7 +58,6 @@ function LMACGallery_admin_unrated_form($form, &$form_state) {
  */
 function LMACGallery_admin_unrated_form_submit($form, &$form_state) {
 
-	debug ($form_state['input']);
 	$imageIds = [];
 	foreach($form_state['input']['table'] as $imageId=>$selectionState) {
 		if ($selectionState == NULL) {

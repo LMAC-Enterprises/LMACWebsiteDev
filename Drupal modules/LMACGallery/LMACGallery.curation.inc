@@ -34,13 +34,15 @@ function LMACGallery_admin_curation_form($form, &$form_state) {
 	}	
 	
 	$form['pickedgroup']['unpick_checked'] = array(
-		'#type' 	=> 'button',
-		'#value' 	=> t('Unpick checked images'), 
+		'#type' 	=> 'submit',
+		'#value' 	=> t('Unpick checked images'),
+		'#submit' 	=> array('LMACGallery_unpickCheckedSubmit'),		
 	);
 	
 	$form['pickedgroup']['unpick_all'] = array(
-		'#type' 	=> 'button',
-		'#value' 	=> t('Unpick all images'), 
+		'#type' 	=> 'submit',
+		'#value' 	=> t('Unpick all images'),
+		'#submit' 	=> array('LMACGallery_unpickAllSubmit'),		
 	);
 	
 	$form['markdowngroup'] = array(
@@ -132,6 +134,27 @@ function LMACGallery_admin_curation_form($form, &$form_state) {
 	return $form;
 }
 
+function LMACGallery_unpickCheckedSubmit($form, &$form_state) {
+	if (! isset($form_state['input']['picked_images'])) {
+		return;
+	}
+	
+	$imageIds = [];
+	
+	foreach($form_state['input']['picked_images'] as $imageId=>$state) {
+		if ($state == NULL) {
+			continue;
+		}
+		$imageIds[] = $imageId;
+	}
+
+	_LMACGallery_unpickImages($imageIds);
+}
+
+function LMACGallery_unpickAllSubmit($form, &$form_state) {
+	_LMACGallery_unpickImages(array_keys($form_state['values']['picked_images']));
+}
+
 function _LMACGallery_getCurationSettings() {
 	
 	return variable_get('LMACGallery_curation', array(
@@ -177,7 +200,7 @@ function _LMACGallery_getCurationImagesOptions($handPickedImages) {
 	$options = [];
 	
 	foreach($handPickedImages as $pickedImage) {
-		$options[$pickedImage['imageid']] = "(" . $pickedImage['rating'] . ") <a href=\"" . $pickedImage['post'] . "\">Post</a><br/><a href=\"" . $pickedImage['url'] . "\" target=\"_blank\"><img src=\"" . $pickedImage['thumbnailUrl']. "\" /></a>";
+		$options[$pickedImage['imageid']] = "(" . (int)$pickedImage['rating'] . ") <a href=\"" . $pickedImage['post'] . "\">Post</a><br/><a href=\"" . $pickedImage['url'] . "\" target=\"_blank\"><img src=\"" . $pickedImage['thumbnailUrl']. "\" /></a>";
 	}
 	
 	return $options;
@@ -191,7 +214,7 @@ function _LMACGallery_getCurationImages() {
 	if (empty($imageIds)) {
 		return [];
 	}
-	
+
  
 	$query = db_select("images", "li");
 	$query->addField("li", "imageid");
@@ -374,5 +397,9 @@ function _LMACGallery_getUsersFromMarkdown($postMarkdown) {
 	}
  	
 	return array_keys($users);
+}
+
+function _LMACGallery_unpickImages($imageIds) {
+	
 }
 

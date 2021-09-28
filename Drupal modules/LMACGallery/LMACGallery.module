@@ -39,7 +39,7 @@ function LMACGallery_menu() {
 	);
 	$items['admin/lmac/lmacg-curation'] = array(
 		'title' 			=> t('Curation Post Helper'),
-		'description'       => t('Manage ratings and create Top lists for Hive posts.'), 
+		'description'       => t('Create Hive posts with hand picked images.'), 
 		'page callback' 	=> 'drupal_get_form',
 		'page arguments' 	=> array('LMACGallery_admin_curation_form'),
 		'access arguments' 	=> array('administer lmac_gallery'),
@@ -231,6 +231,9 @@ function LMACGallery_form_LMACGallery_search_form_alter(&$form, $form_state, $fo
  *   The page content.
  */
 function LMACGallery_page($q="", $pageNo=0) {
+	
+	$q = check_plain($q);
+	
 	drupal_add_js(drupal_get_path('module', 'LMACGallery').'/LMACGallery.js');
 	drupal_add_css(drupal_get_path('module', 'LMACGallery').'/LMACGallery.css');
 	drupal_add_js(array('LMACGallery' => array('dapp' => variable_get('LMACGallery_dapp', 'https://hive.blog/'))), array('type' => 'setting'));
@@ -258,8 +261,8 @@ function LMACGallery_page($q="", $pageNo=0) {
  *   The cache Id.
  */
 function _LMACGallery_getCacheId($searchInputFragments) {
-
-	return 'LMACGallery_'.	preg_replace('[^a-z0-9-]', '', $searchInputFragments);
+ 
+	return 'LMACGallery_'.	str_replace(' ', '_', preg_replace('[^a-z0-9-_]', '', $searchInputFragments));
 }
 
 /**
@@ -330,7 +333,7 @@ function _LMACGallery_getImages($searchInputFragments) {
 		}
  
 		
-		cache_set($cacheId, $cachedSearchResults);
+		cache_set($cacheId, $cachedSearchResults, 'cache', CACHE_TEMPORARY);
 	}else{
 		$cachedSearchResults = $cache->data;
 	}

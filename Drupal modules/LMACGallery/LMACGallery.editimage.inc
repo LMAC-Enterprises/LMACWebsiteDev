@@ -12,6 +12,8 @@ function LMACGallery_admin_addImage_form($form, &$form_state) {
 		'permlink' => '',
 		'author' => ''
 	);	
+	
+	$editMode = FALSE;
  
 	if ($imageId == 'new') {
 	
@@ -23,6 +25,7 @@ function LMACGallery_admin_addImage_form($form, &$form_state) {
 			return array();
 		}else{
 			$formTitle = t('Edit image');
+			$editMode = TRUE;
 		}
 	}
 	
@@ -80,7 +83,15 @@ function LMACGallery_admin_addImage_form($form, &$form_state) {
 		'#title' => t('Permlink'),
 		'#description' => t('The permlink of the source post. (Is part of the post url, right to the username segment.) In example: my-first-lil-contribution'),
 		'#default_value' => $imageDefaults['permlink'],
+		
 	);
+	
+	if ($editMode) {
+		$readonly = array('readonly'=>'readonly');
+		$form['author']['#attributes'] = $readonly;
+		$form['url']['#attributes'] = $readonly;
+		$form['permlink']['#attributes'] = $readonly;
+	}
 	
 	$form['submit'] = array(
 		'#type' => 'submit',
@@ -114,7 +125,7 @@ function _LMACGallery_admin_saveImage($image) {
 		$image['imageid'] = db_query("SELECT MAX(imageid) FROM images")->fetchField();
 	}
 	
-	cache_clear_all('LMACGallery_*', 'cache');
+	cache_clear_all('LMACGallery_*', 'cache', TRUE);
 	
 	return $image['imageid'];
 }
