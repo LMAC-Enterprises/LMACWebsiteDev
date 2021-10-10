@@ -49,7 +49,10 @@ function LMACGallery_admin_unrated_form($form, &$form_state) {
 	$form['#attached']['css'] = array(
 		drupal_get_path('module', 'LMACGallery') . '/LMACGallery.unrated.css',
 	);
-	
+	$form['#attached']['js'] = array(
+		drupal_get_path('module', 'LMACGallery') . '/LMACGallery.unrated.js',
+	);
+ 	
 	return $form;
 }
 
@@ -137,7 +140,7 @@ function _LMACGallery_admin_getHivePostLinkCellContent($rawLink, $imageUrl) {
 	$linklist = array(
 		'item1' => array( 'title' => 'Open in PeakD', 'href' => 'https://peakd.com/' . $rawLink, 'attributes'=>array('target'=>'_blank')),
 		'item2' => array( 'title' => 'Open in Hive.blog', 'href' => 'https://hive.blog/' . $rawLink, 'attributes'=>array('target'=>'_blank')),
-		'item3' => array( 'title' => 'Open image', 'href' => $imageUrl, 'attributes'=>array('target'=>'_blank')),
+		'item3' => array( 'title' => 'Open image', 'href' => $imageUrl, 'attributes'=>array('target'=>'_blank', 'class'=>array('image-tooltip'))),
 	);
 	
 	return theme('links', array(

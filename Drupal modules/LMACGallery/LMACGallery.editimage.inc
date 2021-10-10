@@ -46,7 +46,8 @@ function LMACGallery_admin_addImage_form($form, &$form_state) {
 		'#type' => 'textfield',
 		'#title' => t('Title'),
 		'#default_value' => $imageDefaults['title'],
-		'#size' => 96
+		'#size' => 96,
+		'#maxlength' => 300
 	);
 	
 	$form['tags'] = array(
@@ -60,7 +61,8 @@ function LMACGallery_admin_addImage_form($form, &$form_state) {
 		'#type' => 'textfield',
 		'#title' => t('Image Url'),
 		'#description' => t('The Url of the single image.'),
-		'#default_value' => $imageDefaults['url']
+		'#default_value' => $imageDefaults['url'],
+		'#maxlength' => 300
 	);
 	
 	if (! empty($imageDefaults['url'])) {
@@ -83,6 +85,7 @@ function LMACGallery_admin_addImage_form($form, &$form_state) {
 		'#title' => t('Permlink'),
 		'#description' => t('The permlink of the source post. (Is part of the post url, right to the username segment.) In example: my-first-lil-contribution'),
 		'#default_value' => $imageDefaults['permlink'],
+		'#maxlength' => 300
 		
 	);
 	

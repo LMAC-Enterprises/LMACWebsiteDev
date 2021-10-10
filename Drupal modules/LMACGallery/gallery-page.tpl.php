@@ -34,15 +34,20 @@ foreach($images as $image) {
 </div>
 
 <div class="lmacg_pagination clearfix">
-	<?php if ($pageNo > 0) { ?><a href="<?php print $previousPageUrl; ?>"><?php print t('Previous'); ?></a><?php } ?>
-	<span>(<?php print ($pageNo + 1) . '/' . $pagesTotal; ?>)</span>
-	<?php if ($pageNo < $pagesTotal - 1) { ?><a href="<?php print $nextPageUrl; ?>"><?php print t('Next'); ?></a><?php } ?>
+	<?php if ($pageNo != 0) { ?><a href="<?php print $firstPageUrl; ?>"><?php print t('First'); ?></a>&nbsp;&bull;&nbsp;<?php } ?>
+	<?php if ($pageNo > 0) { ?><a href="<?php print $previousPageUrl; ?>"><?php print t('Previous'); ?></a>&nbsp;&bull;&nbsp;<?php } ?>
+	<span>(<?php print ($pageNo + 1) . '/' . $pagesTotal; ?>)</span>&nbsp;&bull;&nbsp;
+	<?php if ($pageNo < $pagesTotal - 1) { ?><a href="<?php print $nextPageUrl; ?>"><?php print t('Next'); ?></a>&nbsp;&bull;&nbsp;<?php } ?>
+	<a href="<?php print $lastPageUrl; ?>"><?php print t('Last'); ?></a>
 </div>
 <div id="lmacg_modalImageLayer">
 	<div id="lmacg_imageContainer"><img src="" /></div>
-	<div id="lmacg_dataContainer">
+	<div id="lmacg_dataContainer">	
 	<table>
 			<tbody>
+				<tr>
+					<td>Title:</td><td><a id="lmacg_titleData" href="" target="_blank">-</a></td>
+				</tr>
 				<tr>
 					<td>Author:</td><td><a id="lmacg_authorData" href="" target="_blank">@</a></td>
 				</tr>
@@ -55,6 +60,7 @@ foreach($images as $image) {
 			</tbody>
 		</table>
 	</div>
+	<a id="lmacg_modalExit" href="" target="_blank">&#10006;</a>
 </div>
 <script type="application/json" id="imageDataJson">
 <?php print $imagesJson; ?>

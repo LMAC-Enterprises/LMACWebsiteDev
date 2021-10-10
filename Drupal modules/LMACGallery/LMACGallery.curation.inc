@@ -11,6 +11,11 @@ function LMACGallery_admin_curation_form($form, &$form_state) {
 
 	$form['#attached']['css'][] = drupal_get_path('module', 'LMACGallery').'/LMACGallery.curation.css';
 	
+	$form['dev_info'] = array(
+		'#type' => 'markup',
+		'#markup' => '<div class="messages warning"><h2 class="element-invisible">Status message</h2>STILL IN DEVELOPMENT. NOT FOR PRODUCTION!</div>'
+	);
+	
 	$form['pickedgroup'] = array(
 		'#type' => 'fieldset',
 		'#title' => t('Hand picked images'),
@@ -171,7 +176,7 @@ function _LMACGallery_getCurationSettings() {
 
 function LMACGallery_saveMarkdownHandler($form, &$form_state) {
 
-	variable_set('LMACGallery_rating', array(
+	variable_set('LMACGallery_curation', array(
 		'post_markdown_text'		=> $form_state['values']['post_markdown_text'], 
 		'image_markdown_text'		=> $form_state['values']['image_markdown_text'],
 		'post_benefication' 		=> $form_state['values']['post_benefication'],
@@ -183,12 +188,12 @@ function LMACGallery_saveMarkdownHandler($form, &$form_state) {
 	));
  
 	
-	drupal_set_message(t('The markdowns has been saved.'));
+	drupal_set_message(t('The markdowns has been saved for later use.'));
 }
 
 function LMACGallery_previewMarkdownHandler($form, &$form_state) {
 	LMACGallery_saveMarkdownHandler($form, $form_state);
-	drupal_goto('admin/lmac/lmac_ratings/preview_markdown');
+	drupal_goto('admin/lmac/lmacg-curation/preview_markdown');
 }
 
 function _LMACGallery_getCurationImagesOptions($handPickedImages) {
@@ -200,7 +205,7 @@ function _LMACGallery_getCurationImagesOptions($handPickedImages) {
 	$options = [];
 	
 	foreach($handPickedImages as $pickedImage) {
-		$options[$pickedImage['imageid']] = "(" . (int)$pickedImage['rating'] . ") <a href=\"" . $pickedImage['post'] . "\">Post</a><br/><a href=\"" . $pickedImage['url'] . "\" target=\"_blank\"><img src=\"" . $pickedImage['thumbnailUrl']. "\" /></a>";
+		$options[$pickedImage['imageid']] = "(" . (int)$pickedImage['rating'] . ") <a href=\"" . $pickedImage['post'] . "\">Post</a><br/><a href=\"" . $pickedImage['url'] . "\" target=\"_blank\"><img src=\"" . $pickedImage['tinyThumbnailUrl']. "\" /></a>";
 	}
 	
 	return $options;
@@ -231,7 +236,8 @@ function _LMACGallery_getCurationImages() {
 	while ($row = $result->fetchAssoc()) {
  
 		$row['post'] = $dapp . '@' . $row['author'] . '/' . $row['permlink'];
-		$row['thumbnailUrl'] = 'https://images.hive.blog/120x0/' . str_replace('https://images.hive.blog/0x0/"', '', $row['url']);			
+		$row['thumbnailUrl'] = 'https://images.hive.blog/280x0/' . str_replace('https://images.hive.blog/0x0/"', '', $row['url']);
+		$row['tinyThumbnailUrl'] = 'https://images.hive.blog/120x0/' . str_replace('https://images.hive.blog/0x0/"', '', $row['url']);
 		$row['truncatedTitle'] = (strlen($row['title']) > MAX_IMAGE_TITLE_LENGTH) ? substr($row['title'], 0, MAX_IMAGE_TITLE_LENGTH - strlen(TRUNCATE_DOTS)) . TRUNCATE_DOTS : $row['title'];
 		$row['rating'] = $row['ratingscore'];
 		$handPickedImages[$row['imageid']] = $row;		  
@@ -296,7 +302,8 @@ function LMACGallery_previewMarkdown_form($form, &$form_state) {
 	);
 	$form['cancel_send_post'] = array(
 		'#type' 			=> 'submit',
-		'#value'			=> t('Cancel')
+		'#value'			=> t('Cancel'),
+		'#submit'			=> array('_LMACGallery_cancelPreviewMarkdownHandler')
 	);
 	$form['markdown_rendered_preview'] = array(
 		'#type'   			=> 'item',
@@ -310,6 +317,12 @@ function LMACGallery_previewMarkdown_form($form, &$form_state) {
 		'#markup' 			=> _LMACGallery_viewBeneficiaries($beneficiaries),
 	);
 	return $form;
+}
+
+
+function _LMACGallery_cancelPreviewMarkdownHandler($form, &$form_state) {
+
+	drupal_goto('/admin/lmac/lmacg-curation');
 }
 
 function _LMACGallery_compileMarkdown($handPickedImages, $curationSettings) {
@@ -401,5 +414,21 @@ function _LMACGallery_getUsersFromMarkdown($postMarkdown) {
 
 function _LMACGallery_unpickImages($imageIds) {
 	
+	if (empty($imageIds)) {
+		return;
+	}
+	
+	$savedImageIds = variable_get('LMACGallery_curationPicks', array());
+
+	foreach($imageIds as $imageId) {
+	
+		if (($key = array_search($imageId, $savedImageIds)) !== false) {
+			unset($savedImageIds[$key]);
+		}
+	}
+	
+	variable_set('LMACGallery_curationPicks', $savedImageIds);
+	
+	drupal_set_message(t('Images removed from hand picked images.'));
 }
 

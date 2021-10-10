@@ -15,7 +15,9 @@
   $(document).ready(function(){
     $("#lmacgallery-search-form").submit(function(){
 	  
-	  window.location.href = '/lmac_gallery/' +  $("#edit-sq").val();
+	  $searchString = $("#edit-sq").val().replace(/[^0-9a-z, ]/gi, '').toLowerCase ();
+	  
+	  window.location.href = '/lmac_gallery/' +  $searchString;
 	  return false;
 	});
 	
@@ -27,7 +29,8 @@
 		var id = eId.replace('gallerypick_', '');
 		
 		dapp = Drupal.settings['LMACGallery']['dapp'];
-		
+		$("#lmacg_titleData").html(imagesData[id]['title']);
+		$("#lmacg_titleData").attr("href",dapp + '@' + imagesData[id]['author'] + '/' + imagesData[id]['permlink']);
 		$("#lmacg_modalImageLayer img").attr("src",imagesData[id]['url']);
 		$("#lmacg_authorData").attr("href",dapp + '@' + imagesData[id]['author']);
 		$("#lmacg_authorData").html('@' + imagesData[id]['author']);
@@ -76,6 +79,19 @@
 				
 		e.stopPropagation();
 		$(this).hide();
+
+		return false;
+	});
+	
+		
+	$("#lmacg_modalExit").click(function(e){
+
+		if (!$(e.target).is('a')) {
+			return true;
+		}
+				
+		e.stopPropagation();
+		$("#lmacg_modalImageLayer").hide();
 
 		return false;
 	});

@@ -67,10 +67,29 @@
         '#value' 	=> t('Save'),
 		'#submit' 	=> array('LMACGallery_admin_configuration_form_submit'),
     );
+	
+	$form['ratings_group'] = array(
+		'#type'  => 'fieldset',
+		'#title' => t('Ratings'),
+		'#description' => t('Never hit the "DELETE ALL RATINGS" button unless you want to delete ALL ratings from ALL images in the gallery.'),
+		'#attributes' => array('onclick'=>'return confirm("Are you sure? Press \'yes\' if you want to delete all ratings.");')
+	);
+	
+	$form['ratings_group']['ratings'] = array(
+		'#type'  => 'submit',
+		'#value' => t('Delete all ratings'),
+		'#submit' => array('LMACGallery_admin_deleteRatings_submit'),
+	);
 		
 	$form['#rebuild'] = True;
 	
 	return $form;
+ }
+ 
+ function LMACGallery_admin_deleteRatings_submit($form, &$form_state) {
+	
+	db_delete(' lmacg_ratings')->execute();
+	cache_clear_all();
  }
  
  function _LMACGallery_getHideList($makeItemsLinks = False) {

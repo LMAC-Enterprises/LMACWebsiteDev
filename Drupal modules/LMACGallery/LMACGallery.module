@@ -233,20 +233,47 @@ function LMACGallery_form_LMACGallery_search_form_alter(&$form, $form_state, $fo
 function LMACGallery_page($q="", $pageNo=0) {
 	
 	$q = check_plain($q);
+	$q = preg_replace("/[^A-Za-z0-9, ]/", '', $q);
 	
 	drupal_add_js(drupal_get_path('module', 'LMACGallery').'/LMACGallery.js');
 	drupal_add_css(drupal_get_path('module', 'LMACGallery').'/LMACGallery.css');
 	drupal_add_js(array('LMACGallery' => array('dapp' => variable_get('LMACGallery_dapp', 'https://hive.blog/'))), array('type' => 'setting'));
-	
+
 	$images = _LMACGallery_getImages(_LMACGallery_getSearchQueryFragments($q));
-	$chunks = array_chunk($images, 29, TRUE);
+	$imagesAmount = count($images);
+	if ($imagesAmount == 0) {
+		drupal_set_message(t('No images could be found for the requested search terms.'), 'error');
+		$chunks = [];
+	}else{
+	
+		$chunks = array_chunk($images, 29, TRUE);
+		
+		if ($pageNo < 0) {
+			$pageNo = 0;
+			drupal_set_message(t('Order denied! The execution of your order would damage the structure of space-time.'), 'error'); 
+		}	
+			
+		if ($pageNo >= count($chunks)) {
+			$pageNo = count($chunks) - 1;
+			drupal_set_message(t('Oh wow, you just tried to see into the future.  Thank you for the confidence, but we can\'t execute your order for reasons of international security.'), 'error'); 
+		}
+	}	
+	
 	$previousPageUrl = '/lmac_gallery/' . $q . '/'. ($pageNo - 1);
 	$nextPageUrl = '/lmac_gallery/' .  $q . '/'. ($pageNo + 1);
+	$firstPageUrl = '/lmac_gallery/' . $q . '/0';
+	$lastPageUrl = '/lmac_gallery/' . $q . '/' . (count($chunks) - 1);
 	
 	return array(
 		'searchForm' => drupal_get_form('LMACGallery_search_form'),
+		'imageCounter' => array(
+			'#type' =>'markup',
+			'#markup' => t('@images images found.', array('@images'=>$imagesAmount)),
+			'#prefix' => '<em>',
+			'#suffix' => '</em>'
+		),
 		'gallery' => array(
-			'#markup'=>count($chunks) > 0 ? theme('gallery_page', array('handPicked'=>variable_get('LMACGallery_curationPicks', array()),'images'=>$chunks[$pageNo], 'pageNo'=>$pageNo, 'pagesTotal'=>count($chunks), 'previousPageUrl'=>$previousPageUrl, 'nextPageUrl'=>$nextPageUrl, 'imagesJson'=>_LMACGallery_createImagesJson($chunks[$pageNo]))) : t('No images found.')
+			'#markup'=>count($chunks) > 0 ? theme('gallery_page', array('handPicked'=>variable_get('LMACGallery_curationPicks', array()),'images'=>$chunks[$pageNo], 'pageNo'=>$pageNo, 'pagesTotal'=>count($chunks), 'firstPageUrl'=>$firstPageUrl, 'lastPageUrl'=>$lastPageUrl, 'previousPageUrl'=>$previousPageUrl, 'nextPageUrl'=>$nextPageUrl, 'imagesJson'=>_LMACGallery_createImagesJson($chunks[$pageNo]))) : t('No images found.')
 		)
 	);
 }
@@ -333,7 +360,7 @@ function _LMACGallery_getImages($searchInputFragments) {
 		}
  
 		
-		cache_set($cacheId, $cachedSearchResults, 'cache', CACHE_TEMPORARY);
+		cache_set($cacheId, $cachedSearchResults, 'cache', strtotime('+12 hour', time()));
 	}else{
 		$cachedSearchResults = $cache->data;
 	}
@@ -372,6 +399,30 @@ function _LMACGallery_getSearchQueryFragments($searchQuery) {
  */
 function _LMACGallery_dbFetchImagesByTags($query, $urlSearchQuery) {
  
-	$expression = 'MATCH(tags) AGAINST (:search IN BOOLEAN MODE)';
+	if (! empty($urlSearchQuery) && strlen($urlSearchQuery) > 256) {
+		$urlSearchQuery = substr($urlSearchQuery, 0, 256);
+	}
+ 
+	$expression = 'MATCH(li.tags, li.author) AGAINST (:search IN BOOLEAN MODE)';
 	$query->where($expression, [':search' => _LMACGallery_getSearchQueryFragments($urlSearchQuery)]);
+}
+
+
+/**
+ * Implements hook_lmacadmin_statistics.
+ */
+function LMACGallery_lmacadmin_statistics() {
+	
+	module_load_include('inc', 'LMACGallery', 'LMACGallery.statistics');
+
+	$imagesAmount = _LMACGallery_statistics_getAmountOfImages();
+	$ratedAmount = _LMACGallery_statistics_getAmountOfRatedImages();
+	$authorsAmount = _LMACGallery_statistics_getAmountOfAuthors();
+	
+	return array('title'=>t('LMAC Gallery'), 'dataRows'=>array(
+			array('label'=>t('Amount of images'), 'data'=>$imagesAmount),
+			array('label'=>t('Rated'), 'data'=>t(':op1 of :op2', array(':op1'=>$ratedAmount, ':op2'=>$imagesAmount))),
+			array('label'=>t('Amount of authors'), 'data'=>$authorsAmount),
+		)
+	);
 }

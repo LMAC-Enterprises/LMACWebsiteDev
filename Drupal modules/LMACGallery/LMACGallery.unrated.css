@@ -1,3 +1,13 @@
 .form-item-rating-select, #edit-rating-submit {
 	display: inline-block;
 }
+
+#hoverImageTooltip {
+	width: 200px;
+	position: absolute;
+	z-index: 255;
+	display: block;
+	left: 0px;
+	top: 0px;
+}
+ 
