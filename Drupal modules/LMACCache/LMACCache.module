@@ -1,0 +1,53 @@
+<?php
+
+/**
+ * Returns an instance of a persistent cache pool.
+ *
+ * @param $cid
+ *   The cache ID of the data to retrieve.
+ *
+ * @return
+ *   The instance of the cache pool.
+ */
+function LMACCache_getCachePool($cid) {
+	static $_cachePoolInstances = [];
+	
+	module_load_include('inc', 'LMACCache', 'LMACCache.cache');
+
+	$cid = \lmac\cache\CacheController::sanitizeId($cid);
+	
+	if ($cid == NULL) {
+		return $_cachePoolInstances;
+	}
+	
+	if (isset($_cachePoolInstances[$cid])) {
+		return $_cachePoolInstances[$cid];
+	}
+	
+	
+	
+	$newInstance = new \lmac\cache\CacheController($cid);
+	$_cachePoolInstances[$cid] = $newInstance;
+	
+	return $newInstance;
+}
+
+/**
+ * Implements hook_exit().
+ */
+function LMACCache_exit() {
+	
+	$cachePoolInstances = LMACCache_getCachePool(NULL);
+	foreach($cachePoolInstances as $cachePoolInstance) {
+		
+		$cachePoolInstance->commit();
+	}
+}
+
+function LMACCache_flush_caches() {
+	
+	module_load_include('inc', 'LMACCache', 'LMACCache.cache');
+	\lmac\cache\CacheController::clearAll();
+
+	return array();
+}

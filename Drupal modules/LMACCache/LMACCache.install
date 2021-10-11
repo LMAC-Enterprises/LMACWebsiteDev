@@ -1,0 +1,9 @@
+<?php
+
+/**
+ * Implements hook_install().
+ */
+function LMACCache_install() { 
+	
+	mkdir(drupal_realpath('private://') . DIRECTORY_SEPARATOR . 'LMACCache', 0660);
+}

@@ -1,0 +1,5 @@
+name = LMAC Cache
+description = A flexible and efficient cache for the LMAC modules.
+core = 7.x
+configure = admin/lmac/cache
+package = LMAC
