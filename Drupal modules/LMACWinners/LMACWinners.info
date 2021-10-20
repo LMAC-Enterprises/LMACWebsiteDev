@@ -1,0 +1,7 @@
+name = LMAC Winners
+description = The gallery of the LMAC Contest winners
+core = 7.x
+package = LMAC
+dependencies[] = LMACAdmin
+dependencies[] = LMACCache
+configure = admin/lmac/lmac-winners

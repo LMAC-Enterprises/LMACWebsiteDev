@@ -1,0 +1,161 @@
+#lmac-contest-navigation {
+	margin-bottom: 15px;
+	text-align: center;
+}
+
+#lmac-contest-navigation > a {
+	margin-right: 5px;
+}
+
+#lmac-contest-navigation.footer-nav {
+	margin-top: 10px;
+}
+
+#lmac-contest-navigation.header-nav {
+	margin-bottom: 10px;
+}
+
+#lmac-contest-template-thumbnail-container {
+	width: 300px;
+}
+
+#lmac-contest-template-thumbnail-footer {
+	text-align: center;
+	background-color: #ececec; 
+	width: 300px;
+}
+
+#lmac-contest-template-thumbnail-container > a {
+	display: block;
+}
+
+#lmac-contest-winners {
+
+	 
+}
+
+#lmac-contest-winners > h3 {
+	margin-top: 0;
+	margin-bottom: 15px;
+	padding: 2px;
+	border-bottom: 1px solid #ccc;
+	width: 120px;
+	text-align: center;
+}
+
+#lmac-contest-info {
+	border-bottom: 1px solid #ccc;
+	padding-bottom: 15px;
+}
+
+.lmac-contest-winner-thumbnail-box {
+	display: inline-block;
+	margin-right: 10px;
+	padding-bottom: 20px;
+	vertical-align: top;
+	height: auto;
+}
+
+.lmac-contest-winner-thumbnail-footer {
+	color: #121212;
+    background-color: #ececec;
+	padding: 2px;
+}
+
+.lmac-contest-winner-thumbnail-footer > .lmac-winner-artist-label {
+	margin-left: 5px;
+}
+
+.lmac-contest-winner-dapps-box {
+	text-align: center;
+    width: 82px;
+	height: 28px;
+    z-index: 254;
+	position: relative;
+	top: -43px;
+	right: -210px;
+	padding-left: 2px;
+	padding-top: 4px;
+	display: block;
+	background-color: rgba(250, 250, 250, 0.5);
+	border-radius: 8px;
+}
+
+.lmac-winner-dapp-link {
+	display: inline-block;
+	width: 22px;
+	height: 22px;
+	text-decoration: none;
+	background-repeat: no-repeat;
+}
+
+.lmac-winner-dapp-link.peakd-dapp-icon {
+	background-image: url(images/PeakDLogo.png);
+}
+
+.lmac-winner-dapp-link.hive-blog-dapp-icon {
+	background-image: url(images/HiveBlogLogo.png);
+}
+
+.lmac-winner-dapp-link.ecency-dapp-icon {
+	background-image: url(images/Ecency.png);
+}
+
+td.title-links > ul{
+	display: inline-block;
+}
+ 
+td.title-links {
+	text-align: left;
+}
+
+.lmac-contest-title-links,
+.lmac-contest-title-links > li {
+	margin: 0 !important;
+	padding: 0!important;
+}
+
+#lmac-contest-info table > tbody > tr {
+	border: none !important;
+}
+
+#lmac-contest-image-modal-layer {
+	background-color: rgba(50, 50, 50, 0.5);
+	z-index: 1000;
+    position: fixed;
+	left: 0;
+	top: 0;
+	width: 100%;
+	height: 100%;
+	transition: visibility 0s linear 0.25s, opacity 0.25s 0s, transform 0.25s;
+}
+
+#lmac-contest-imageContainer {
+	margin: 25px auto 0px;
+	width: auto;
+	max-width: 99%;
+	height: 80%;
+	min-height: 70%;
+	background-color: black;
+	background-image: url(images/checker.png);
+	background-repeat: repeat;
+	vertical-align: middle;
+	overflow: hidden;
+	text-align: center;
+}
+
+#lmac-contest-image-modal-layer > img {
+	width: auto !important;
+	margin: 0 auto;	
+ 	max-width: 100%;
+	height: 100%;
+}
+
+#lmac-contest-image-modal-layer > a {
+	position: absolute;
+	z-index: 1002;
+	top: 25px;
+	left: 25px;
+	font-size: 16px;
+	color: white;
+}

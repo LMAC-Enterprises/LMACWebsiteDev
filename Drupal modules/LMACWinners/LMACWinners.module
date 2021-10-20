@@ -1,0 +1,407 @@
+<?php
+
+function LMACWinners_menu() {
+	
+	$items = array();
+	
+	$items['lmac-winners'] = array(
+		'title' 			=> t('LMAC Winners'),
+		'description'       => t('Overview of all LMAC Winners'), 
+		'page callback' 	=> 'LMACWinners_winnersPage',
+		'page arguments' 	=> array(),
+		'access arguments' 	=> array('view lmac_contest'),
+	);	
+	$items['lmac-winners/%'] = array(
+		'page callback' 	=> 'LMACWinners_winnersPage',
+		'page arguments' 	=> array(1),
+		'access arguments' 	=> array('view lmac_contest'),
+	);	
+	$items['admin/lmac/contests'] = array(
+		'title' 			=> t('LMAC Contests'),
+		'description'       => t('Administer the LMAC contests used on the winners page.'), 
+		'page callback' 	=> 'drupal_get_form',
+		'page arguments' 	=> array('LMACWinners_admin_contests_form'),
+		'access arguments' 	=> array('administer lmac_contest'),
+		'file' 				=> 'LMACWinners.adminContests.inc',
+	);	
+	$items['admin/lmac/new-contest'] = array(
+		'page callback' 	=> 'drupal_get_form',
+		'page arguments' 	=> array('LMACWinners_admin_editContest_form'),
+		'access arguments' 	=> array('administer lmac_contest'),
+		'file' 				=> 'LMACWinners.adminContests.inc',
+	);	
+	$items['admin/lmac/edit-contest/%'] = array(
+		'page callback' 	=> 'drupal_get_form',
+		'page arguments' 	=> array('LMACWinners_admin_editContest_form', 3),
+		'access arguments' 	=> array('administer lmac_contest'),
+		'file' 				=> 'LMACWinners.adminContests.inc',
+	);	
+	$items['admin/lmac/winners/%'] = array(
+		'page callback' 	=> 'drupal_get_form',
+		'page arguments' 	=> array('LMACWinners_admin_winners_form', 3),
+		'access arguments' 	=> array('administer lmac_contest'),
+		'file' 				=> 'LMACWinners.adminContests.inc',
+	);
+	
+	$items['admin/lmac/new-winner/%'] = array(
+		'page callback' 	=> 'drupal_get_form',
+		'page arguments' 	=> array('LMACWinners_admin_winnerEdit_form', 3),
+		'access arguments' 	=> array('administer lmac_contest'),
+		'file' 				=> 'LMACWinners.adminContests.inc',
+	);
+	$items['admin/lmac/edit-winner/%/%'] = array(
+		'page callback' 	=> 'drupal_get_form',
+		'page arguments' 	=> array('LMACWinners_admin_winnerEdit_form', 3, 4),
+		'access arguments' 	=> array('administer lmac_contest'),
+		'file' 				=> 'LMACWinners.adminContests.inc',
+	);
+	
+	return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function LMACWinners_permission() {
+  return array(
+    'administer lmac_contest' => array(
+      'title' => t('Administer LMAC contests'),
+    ),
+	'view lmac_contest' => array(
+      'title' => t('View LMAC contests'),
+    ),
+  );
+}
+
+
+/**
+ * Implements hook_schema().
+ */
+function LMACWinners_schema() {
+	$schema = [];
+	
+	$schema['lmacrounds'] = array(
+		'description' => 'Table to keep LMAC rounds.',
+
+		'fields' => array(
+			'roundid' => array(
+				'description' => 'The primary identifier for a LMAC round entry. The round number.',
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'winnerstitle' => array(
+				'description' => 'The title of the winners post.',
+				'type' => 'varchar',
+				'length' => 64,
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'winnersurl' => array(
+				'description' => 'The url of winners post.',
+				'type' => 'varchar',
+				'length' => 512,
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'polltitle' => array(
+				'description' => 'The title of the poll post.',
+				'type' => 'varchar',
+				'length' => 512,
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'pollurl' => array(
+				'description' => 'The url of poll post.',
+				'type' => 'varchar',
+				'length' => 512,
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'announcementtitle' => array(
+				'description' => 'The title of announcement post.',
+				'type' => 'varchar',
+				'length' => 512,
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'announcementurl' => array(
+				'description' => 'The url of announcement post.',
+				'type' => 'varchar',
+				'length' => 512,
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'templateimageurl' => array(
+				'description' => 'The url template image used in the contest.',
+				'type' => 'varchar',
+				'length' => 512,
+				'not null' => TRUE,
+				'default' => '',
+			),
+		),
+		'primary key' => array(
+			'roundid',
+		),
+	);
+	
+	$schema['lmacwinners'] = array(
+		'description' => 'Table to keep LMAC winners.',
+ 
+		'fields' => array(
+			'winnerid' => array(
+				'description' => 'The primary identifier for a winner entry.',
+				'type' => 'serial',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'round' => array(
+				'description' => 'Number of the LMAC round.',
+				'type' => 'int',
+				'unsigned' => TRUE,
+				'not null' => TRUE,
+			),
+			'place' => array(
+				'description' => 'The place the participant has won.',
+				'type' => 'int',
+				'not null' => TRUE,
+				'default' => 0,
+			),
+			'artist' => array(
+				'description' => 'The Hive name of the artist.',
+				'type' => 'varchar',
+				'length' => 64,
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'imageurl' => array(
+				'description' => 'The url of winner collage image file.',
+				'type' => 'varchar',
+				'length' => 512,
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'posturl' => array(
+				'description' => 'The url of the Hive post of the winner collage.',
+				'type' => 'varchar',
+				'length' => 512,
+				'not null' => TRUE,
+				'default' => '',
+			),
+			'title' => array(
+				'description' => 'The title of the Hive post of the winner collage.',
+				'type' => 'varchar',
+				'length' => 512,
+				'not null' => TRUE,
+				'default' => '',
+			),
+		),
+		'primary key' => array(
+			'winnerid',
+		),
+	);
+	return $schema;
+}
+
+/**
+ * Implements hook_theme()
+ */
+function LMACWinners_theme() {
+ 
+	$themes = array();
+	$themes['LMACWinners_page'] = array(
+		'template' => 'LMACWinners-page',
+		'path' => drupal_get_path('module', 'LMACWinners'),
+	);
+    return $themes;
+}
+
+function LMACWinners_winnersPage_search_form($form, &$form_state) {
+
+	$form['contest-round'] = array(
+	   '#type' => 'select',
+	   '#title' => t('Choose a contest'),
+	   '#options' => _LMACWinners_getContestOptions(),
+	   '#default_value' => 0,
+	);
+
+	return $form;
+}
+
+function _LMACWinners_getContestOptions() {
+	
+	$options = [];
+	
+	$query = db_select("lmacrounds", "lr");
+	$query->addField("lr", "roundid");
+	$query->orderBy("roundid", 'DESC');
+	
+	$result = $query->execute();
+	while ($row = $result->fetchAssoc()) {
+		
+		$options[$row['roundid']] = t('LMAC #!round', array('!round' => $row['roundid']));
+	}
+	
+	return $options;
+}
+
+function LMACWinners_winnersPage($round = -1) {
+
+	$contest = _LMACWinners_getContest($round);
+	if ($contest == NULL) {
+		drupal_not_found();
+		return;
+	}
+	
+	drupal_add_css(drupal_get_path('module', 'LMACWinners') . '/simpleGallery/simpleGallery.css');
+	drupal_add_css(drupal_get_path('module', 'LMACWinners') . '/LMACWinners.css');
+	drupal_add_js(drupal_get_path('module', 'LMACWinners') . '/LMACWinners.js');
+	drupal_add_js(drupal_get_path('module', 'LMACWinners') . '/simpleGallery/jquery.simpleGallery.js');
+	
+	$links = [];
+	
+	$links['announcementLinks'] = _LMACWinners_renderDappLinks(_LMACWinners_getDappLinks($contest->announcementurl));
+	$links['winnersLinks'] = _LMACWinners_renderDappLinks(_LMACWinners_getDappLinks($contest->winnersurl));
+	$links['pollLinks'] = _LMACWinners_renderDappLinks(_LMACWinners_getDappLinks($contest->pollurl));
+	
+ 
+	return array(
+		'page' => array(
+			'#type' => 'markup',
+			'#markup' => theme('LMACWinners_page', array('contest'=>$contest, 'links'=>$links, 'navigation' => _LMACWinners_getNavigationUrls($contest->roundid)))
+		)
+	);
+}
+
+function _LMACWinners_getNavigationUrls($round) {
+	$navigationData = db_query('SELECT roundid, (SELECT roundid FROM {lmacrounds} AS prev WHERE prev.roundid<lr.roundid ORDER BY prev.roundid DESC LIMIT 1) as previousroundid, (SELECT roundid FROM {lmacrounds} as nxt WHERE nxt.roundid>lr.roundid ORDER BY nxt.roundid ASC LIMIT 1) as nextroundid FROM {lmacrounds} AS lr WHERE lr.roundid=:currentRound LIMIT 1', array('currentRound' => (int)$round))
+	->fetchObject();
+	 
+	return array(
+		'previousRound' => isset($navigationData->previousroundid) ? '/lmac-winners/' . $navigationData->previousroundid : NULL,
+		'nextRound' => isset($navigationData->nextroundid) ? '/lmac-winners/' . $navigationData->nextroundid : NULL,
+	);
+}
+
+function _LMACWinners_getContest($round) {
+ 
+	if ($round < 0 || empty($round)) {
+		$contest = db_query('SELECT * FROM {lmacrounds} ORDER BY roundid DESC LIMIT 1')
+		->fetchObject();
+	}else{
+		$contest = db_query('SELECT * FROM {lmacrounds} WHERE roundid = :id LIMIT 1', array(':id' => $round))
+		->fetchObject();
+	}
+	if (! $contest) {
+		return NULL;
+	}
+	
+	if (! empty($contest->templateimageurl)) {
+		$contest->templateThumbnailUrl = 'https://images.hive.blog/300x0/' . str_replace('https://images.hive.blog/0x0/', '', $contest->templateimageurl);
+	}
+	
+	$contest->title = isset($contest->announcementtitle) ? $contest->announcementtitle : t('Not yet set.');
+ 
+	$query = db_select("lmacwinners", "lw");
+	$query->addField("lw", "winnerid");
+	$query->addField("lw", "round");
+	$query->addField("lw", "place");
+	$query->addField("lw", "artist");
+	$query->addField("lw", "imageurl");
+	$query->addField("lw", "posturl");
+	$query->addField("lw", "title");
+	$query->where('lw.round = :roundid', array(':roundid'=>$contest->roundid));
+	$query->orderBy("place", 'ASC');
+
+	$result = $query->execute();
+
+	$contest->winners = [];
+	
+	while ($row = $result->fetchAssoc()) {
+		
+		$row['dappyfiedPostUrls'] = _LMACWinners_getDappLinks($row['posturl']);
+		$row['placeText'] = _LMACWinners_getContestPlaceTextColumn($row['place']);
+		$row['imageThumbnailUrl'] = 'https://images.hive.blog/300x0/' . str_replace('https://images.hive.blog/0x0/', '', $row['imageurl']);
+		$contest->winners[] = $row;
+	}
+		
+	return $contest;
+}
+
+function _LMACWinners_getContestPlaceTextColumn($place) {
+	$place = (int)$place;
+	switch($place) {
+		case 1:
+			return t('!placest place', array('!place' => $place));
+		case 2:
+			return t('!placend place', array('!place' => $place));
+		case 3:
+			return t('!placerd place', array('!place' => $place));
+		case 10:
+			return t('Top 10');
+		case 15:
+			return t('Top 15');
+		default:
+			return t('!placeth place', array('!place' => $place));
+		
+		
+	}
+}
+ 
+function _LMACWinners_getDappHosts() {
+	
+	return array(
+		'peakd' => 'peakd.com',
+		'hive-blog' => 'hive.blog',
+		'ecency' => 'ecency.com'
+	);
+}
+
+function _LMACWinners_startsWith($string, $startString)
+{
+    $len = strlen($startString);
+    return (substr($string, 0, $len) === $startString);
+}
+
+function _LMACWinners_getDappLinks($url) {
+	
+	$urlSegments = parse_url($url);
+	$links = [];
+	foreach (_LMACWinners_getDappHosts() as $hostKey => $host) {
+		$scheme   = isset($urlSegments['scheme']) ? $urlSegments['scheme'] . '://' : '';
+		$port     = isset($urlSegments['port']) ? ':' . $urlSegments['port'] : '';
+		$user     = isset($urlSegments['user']) ? $urlSegments['user'] : '';
+		$path     = isset($urlSegments['path']) ? $urlSegments['path'] : '';
+		$query    = isset($urlSegments['query']) ? '?' . $urlSegments['query'] : '';
+		$fragment = isset($urlSegments['fragment']) ? '#' . $urlSegments['fragment'] : '';
+		
+		$link = "$scheme$user$host$port$path$query$fragment";
+		if (! _LMACWinners_startsWith($link, 'https://')) {
+			if (_LMACWinners_startsWith($link, '/')) {
+				$link = substr($link, 1);
+			}
+			$link = 'https://' . $link;
+		}
+		
+		$links[$hostKey] = $link;
+	}
+
+	
+	return $links;
+}
+
+function _LMACWinners_renderDappLinks($dappUrls) {
+	
+	$links = [];
+	
+	foreach ($dappUrls as $dappKey=>$dappUrl) {
+		
+		$links['item-' . $dappKey] = array('title' => ' ', 'href' => $dappUrl, 'attributes' => array('target'=>'_blank', 'class'=>array('lmac-winner-dapp-link',  $dappKey . '-dapp-icon')));
+	}
+
+	return theme('links', array(
+	  'links' => $links,
+	  'attributes' => array('class' => array('lmac-contest-title-links')),
+	));
+}
+ 
