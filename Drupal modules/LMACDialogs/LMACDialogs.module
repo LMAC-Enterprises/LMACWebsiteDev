@@ -1,0 +1,178 @@
+<?php
+/**
+ * @author: QuantumG
+ * @description: Provides an API for creating dialog boxes.
+ *
+ * How to use:
+ *
+ * - Implement hook_lmacDialog in your module to define dialogs. See _LMACDialogs_renderDialogs()s comment to learn how it works.
+ * - Use the JavaScript dialog controller to open the dialog: Example: LMACDialogsController.openDialog('myMessagedBox');
+ *   OR use the PHP function LMACDialog_setDialogOpen to let it open on page load.
+ */
+
+/**
+ * Opens a dialog on page load.
+ * @param dialogId
+ *   The html id of the dialog as defined in a hook_lmacDialog implementation.
+ *  @param replacements
+ *   An associative array of to-replace/replacement elements for replacing texts in the dialog message.
+ *
+ * @return
+ *   Nothing
+ */
+function LMACDialog_setDialogOpen($dialogId, $replacements = array()) {
+	static $openedDialogs = [];
+	
+	if (isset($openedDialogs[$dialogId])) {
+		return FALSE;
+	}
+	
+	$openedDialogs[$dialogId] = TRUE;
+	
+	drupal_add_js(array('LMACDialogs' => array('initiallyOpen' => array('dialogId'=>$dialogId, 'replacements'=>$replacements))), array('type' => 'setting'));
+	
+	return TRUE;
+}
+
+/**
+ * Implements hook_theme()
+ */
+function LMACDialogs_theme() {
+ 
+	$themes = array();
+	$themes['LMACDialogs_dialog'] = array(
+		'template' => 'LMACDialogs-dialog',
+		'path' => drupal_get_path('module', 'LMACDialogs'),
+	);
+	$themes['LMACDialogs_popupLayer'] = array(
+		'template' => 'LMACDialogs-popupLayer',
+		'path' => drupal_get_path('module', 'LMACDialogs'),
+	);
+ 	$themes['LMACDialogs_dialog_download'] = array(
+		'template' => 'LMACDialogs-dialog-download',
+		'path' => drupal_get_path('module', 'LMACDialogs'),
+	);
+	
+    return $themes;
+}
+
+/**
+ * Implements hook_page_alter()
+ */
+function LMACDialogs_page_alter(&$page) {
+
+	// Add help text to the user login block.
+	$page['page_bottom']['LMACDialogs'] = array(
+		'#weight' => 0,
+		'#markup' => _LMACDialogs_renderDialogs()
+	);  
+	drupal_add_js(drupal_get_path('module', 'LMACDialogs').'/LMACDialogs.js');
+	drupal_add_css(drupal_get_path('module', 'LMACDialogs').'/LMACDialogs.css');
+}
+/**
+ * Checks whether a field in a (settings) array exists
+ *
+ * @param $settings
+ *   The associative array.
+  * @param $fieldName
+ *   Name of the field.
+ *
+ * @return
+ *   TRUE on success.
+ */
+function _LMACDialogs_settingAssert($settings, $fieldName) {
+	
+	return isset($settings[$fieldName]) && !empty($settings[$fieldName]);
+}
+
+/**
+ * Renders all dialogs returned by all available hook_lmacDialog() implementations.
+ * 
+ * Example implementation:
+ * 		function myModule_lmacDialogs() {
+ * 			return array(
+ *				'myMessageBox' => array(
+ *					'#type' => 'messagebox',
+ * 					'#title' => t('My message'),
+ *					'#message => t('This is my message')
+ * 					'#buttons' => array(
+ *						'myConfirmButton' => array(
+ * 							'#title' => t('Confirm'),
+ *							'#ajax' => 'ajax/this-is-my-optional-ajax-call/%(buttonId)/%(dialogId)' // Results in 'ajax/this-is-my-optional-ajax-call/myConfirmButton/myMessageBox)'
+ *						),
+ *						'myCancelButton' => array(
+ * 							'#title' => t('Cancel'),
+ *						)
+ *				);
+ *			);
+ *		}
+ */
+function _LMACDialogs_renderDialogs() {
+	
+	$renderedDialogs = '';
+	
+	$dialogs = module_invoke_all('lmacDialogs');
+
+	foreach($dialogs as $dialogId=>$dialogSettings) {
+		
+		if (! _LMACDialogs_settingAssert($dialogSettings, '#type')) {
+			drupal_set_message('A LMACDialog dialog must have a #type definition.', 'error');
+			continue;
+		}
+		
+		if (! _LMACDialogs_settingAssert($dialogSettings, '#title')) {
+			drupal_set_message('A LMACDialog dialog must have a #title definition.', 'error');
+			continue;
+		}
+		
+		if (! _LMACDialogs_settingAssert($dialogSettings, '#message')) {
+			drupal_set_message('A LMACDialog dialog must have a #message definition.', 'error');
+			continue;
+		}
+		
+		$dialogContent = '';
+		$dialogFooter = '';
+		$dialogRuntimeStyles = [];
+		
+		if (_LMACDialogs_settingAssert($dialogSettings, '#width')) {
+			$dialogRuntimeStyles[] = 'width:' . $dialogSettings['#width'] . ';';
+		}
+		if (_LMACDialogs_settingAssert($dialogSettings, '#height')) {
+			$dialogRuntimeStyles[] = 'height:' . $dialogSettings['#height'] . ';';
+		}
+		
+		switch($dialogSettings['#type']) {
+			case 'messagebox':
+				$dialogContent = $dialogSettings['#message'];
+				break;
+				
+			case 'downloadbox':
+				if (_LMACDialogs_settingAssert($dialogSettings, '#href') && _LMACDialogs_settingAssert($dialogSettings, '#linktitle')) {
+				$dialogContent = theme('LMACDialogs_dialog_download', array('message'=>$dialogSettings['#message'], 'linkUrl'=>$dialogSettings['#href'], 'linkTitle'=>$dialogSettings['#linktitle']));
+				}else{
+					drupal_set_message('A LMACDialog download dialog must have a #href and a #linktitle definition.', 'error');
+				}
+				break;
+		}
+		
+		if (! empty($dialogSettings['#buttons'])) {
+			foreach($dialogSettings['#buttons'] as $buttonId=>$buttonSettings) {
+				
+				if (! _LMACDialogs_settingAssert($buttonSettings, '#title')) {
+					drupal_set_message('A LMACDialog dialog button must have a #title definition.', 'error');
+					continue;
+				}
+				
+				$buttonSettings['#parentDialog'] = $dialogId;
+				
+				drupal_add_js(array('LMACDialogs' => array('buttons' => array($buttonId=>$buttonSettings))), array('type' => 'setting'));
+				$dialogFooter .= '<input id="' . $buttonId . '" type="button" value="' . $buttonSettings['#title'] . '"/>';
+			}
+		}
+ 		
+		$renderedDialogs .=  theme('LMACDialogs_dialog', array('dialogId'=>$dialogId, 'title'=>$dialogSettings['#title'], 'content'=>$dialogContent, 'footer'=>$dialogFooter, 'styles'=>implode(' ', $dialogRuntimeStyles)));
+	}
+		
+	return theme('LMACDialogs_popupLayer', array('dialogs'=>$renderedDialogs));
+}
+

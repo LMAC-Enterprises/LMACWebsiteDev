@@ -1,0 +1,64 @@
+#lmac-dialogs-popup-overlay {
+  display: none;
+  position: fixed; 
+  z-index: 6000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgb(0,0,0); 
+  background-color: rgba(0,0,0,0.4);
+}
+
+.lmac-dialogs-dialog {
+	display: none;
+	min-width: 300px;
+	min-height: 100px;
+	width: 300px;
+	height: auto;
+	margin: 0 auto;
+	margin-top: 25px;
+	background-color: white;
+	border: 1px solid #ccc;
+	padding: 2px;
+}
+
+.lmac-dialogs-dialog-content {
+	clear: both;
+	padding: 2px;
+	min-height: 100px;
+}
+
+.lmac-dialogs-dialog-header-title {
+	float: left;
+	padding: 2px;
+	vertical-align: middle;
+}
+
+.lmac-dialogs-dialog-header-control {
+	float: right;
+	padding: 2px;
+}
+
+.lmac-dialogs-dialog-header {
+	font-size: 1.25em;
+	font-weight: bold;
+}
+
+.lmac-dialogs-dialog-footer {
+	padding: 2px;
+	text-align: right;
+}
+
+.lmac-dialogs-dialog-footer > input[type=button] {
+	margin-left: 2px;
+}
+
+.lmac-dialogs-dialog-header-control > a {
+	text-decoration: none;
+}
+
+.lmac-dialogs-dialog-header-control > a:hover {
+	text-decoration: none;
+}
