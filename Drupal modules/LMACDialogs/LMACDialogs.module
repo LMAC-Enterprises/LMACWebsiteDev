@@ -12,6 +12,7 @@
 
 /**
  * Opens a dialog on page load.
+ *
  * @param dialogId
  *   The html id of the dialog as defined in a hook_lmacDialog implementation.
  *  @param replacements
@@ -69,6 +70,56 @@ function LMACDialogs_page_alter(&$page) {
 	drupal_add_js(drupal_get_path('module', 'LMACDialogs').'/LMACDialogs.js');
 	drupal_add_css(drupal_get_path('module', 'LMACDialogs').'/LMACDialogs.css');
 }
+
+/**
+ * Checks whether at least one of the #urls attributes of a dialog settings does match with the current url.
+ *
+ * @params $dialogSettings
+ * 	A dialog settings array.
+ * @returns 
+ * TRUE on success.
+ */
+function _LMACDialogs_doesMatchCurrentPath($dialogSettings) {
+		
+	if (! _LMACDialogs_settingAssert($dialogSettings, '#urls')) {
+		return TRUE;
+	}
+	
+	$currentUrlSegments = [];
+	
+	if (_LMACDialogs_settingAssert($_GET, 'q')) {
+		$currentUrlSegments = explode('/', $_GET['q']);
+	}else{
+		return FALSE;
+	}
+	
+	foreach($dialogSettings['#urls'] as $url) {
+
+		$urlSegments = explode('/', $url);
+		$amountOfUrlSegments = count($urlSegments);
+		$match = TRUE;
+		
+		for($i=0; $i<count($currentUrlSegments); $i++) {
+			if ($i>=$amountOfUrlSegments) {
+				$match = FALSE;
+				break;
+			}
+			
+			if ($urlSegments[$i] != $currentUrlSegments[$i]) {
+				if ($urlSegments[$i] != '*') {
+					$match = FALSE;
+					break;
+				}
+			}
+		}
+		
+		if ($match) {
+			return TRUE;
+			
+		}
+	}
+}
+
 /**
  * Checks whether a field in a (settings) array exists
  *
@@ -115,6 +166,10 @@ function _LMACDialogs_renderDialogs() {
 
 	foreach($dialogs as $dialogId=>$dialogSettings) {
 		
+		if (! _LMACDialogs_doesMatchCurrentPath($dialogSettings)) {
+			continue;
+		}
+
 		if (! _LMACDialogs_settingAssert($dialogSettings, '#type')) {
 			drupal_set_message('A LMACDialog dialog must have a #type definition.', 'error');
 			continue;
