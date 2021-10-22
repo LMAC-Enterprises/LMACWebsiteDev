@@ -5,6 +5,7 @@
 function LMACDialogs() {
 
 	this.closeButtonDialogMap = createCloseButtonMap();
+	this.closeCallbacks = {};
 	
 	var self=this;
 	
@@ -68,15 +69,26 @@ function LMACDialogs() {
 	 * @return
 	 *   Nothing
 	 */
-	self.openDialog = function(dialogId, replacements = []) {
+	self.openDialog = function(dialogId, replacements = [], closeCallback = null) {
+ 
+		var dialog = jQuery('#' + dialogId + '> .lmac-dialogs-dialog-content');
+		if (dialog.length == 0) {
+			return;
+		}
  
 		if (Object.keys(replacements).length > 0) {
-			content = jQuery('#' + dialogId + ' .lmac-dialogs-dialog-content').html();
-			for($replacementKey in replacements) {
-				content = content.replace($replacementKey, replacements[$replacementKey]);
+			content = jQuery('#' + dialogId + ' > .lmac-dialogs-dialog-content').html();
+			for(replacementKey in replacements) {
+
+				content = content.replace(replacementKey, replacements[replacementKey]);
 			}
-			jQuery('#' + dialogId + ' .lmac-dialogs-dialog-content').html(content);
+			jQuery('#' + dialogId + ' > .lmac-dialogs-dialog-content').html(content);
 			
+		}
+	 
+		
+		if (closeCallback !== null) {
+			self.closeCallbacks[dialogId] = closeCallback;
 		}
 		
 		jQuery('#lmac-dialogs-popup-overlay').show();
@@ -95,6 +107,9 @@ function LMACDialogs() {
 	self.closeDialog = function(dialogId) {
 		jQuery('#lmac-dialogs-popup-overlay').hide();
 		jQuery('#' + dialogId).hide();
+		if (typeof self.closeCallbacks[dialogId] !== 'undefined') {
+			self.closeCallbacks[dialogId](dialogId);
+		}
 	}	
 }
 
