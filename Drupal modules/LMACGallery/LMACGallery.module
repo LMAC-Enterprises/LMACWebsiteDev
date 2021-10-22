@@ -27,7 +27,11 @@ function LMACGallery_menu() {
 		'page arguments' 	=> array(1),
 		'access callback'   =>  true,
 	);
- 	
+	$items['lmac_gallery-image/%'] = array(
+		'page callback' 	=> 'LMACGallery_imagePage',
+		'page arguments' 	=> array(1),
+		'access callback'   =>  true,
+	);	
 	$items['admin/lmac/config'] = array(
 		'title' 			=> t('Configure LMAC Gallery'),
 		'description'       => t('Configure the behaviour of the gallery page and block image urls from being listed there.'), 
@@ -96,6 +100,9 @@ function LMACGallery_permission() {
     'administer lmac_gallery' => array(
       'title' => t('Administer LMAC Gallery'),
     ),
+    'delete lmac_gallery ratings' => array(
+      'title' => t('Delete LMAC Gallery ratings'),
+    ),
   );
 }
 
@@ -107,6 +114,10 @@ function LMACGallery_theme() {
 	$themes = array();
 	$themes['gallery_page'] = array(
 		'template' => 'gallery-page',
+		'path' => drupal_get_path('module', 'LMACGallery'),
+	);
+	$themes['gallery_image_page'] = array(
+		'template' => 'gallery-image-page',
 		'path' => drupal_get_path('module', 'LMACGallery'),
 	);
     return $themes;
@@ -165,6 +176,21 @@ function LMACGallery_schema() {
 		),
 	);
 	return $schema;
+}
+
+function LMACGallery_lmacDialogs() {
+	return array(
+		'lmacGalleryDownloadInfo' => array(
+			'#type' => 'messagebox',
+			'#title' => t('Download image'),
+			'#message' => t('If using this image, please add @authorXY as 2% beneficiary to your Hive post. Also include the #lil tag to help our curators finding your post. Thank you!') . '<br/><a id="lmac-gallery-image-download-link" href="downloadHref" target="_blank" download="download">' . t('Click to download') . '</a>',
+			'#urls' => array(
+				'lmac_gallery',
+				'lmac_gallery/*',
+				'lmac_gallery-image/*'
+			)
+		)
+	);
 }
 
 /**
@@ -360,7 +386,7 @@ function _LMACGallery_getImages($searchInputFragments) {
 		}
  
 		
-		cache_set($cacheId, $cachedSearchResults, 'cache', strtotime('+12 hour', time()));
+		cache_set($cacheId, $cachedSearchResults, 'cache', strtotime('+15 minute', time()));
 	}else{
 		$cachedSearchResults = $cache->data;
 	}
@@ -426,3 +452,57 @@ function LMACGallery_lmacadmin_statistics() {
 		)
 	);
 }
+
+/**
+ * Retrieves the image of a specific image id.
+ * @param $imageID The database Id of the image.
+ * @return The image on success. Otherwise FALSE.
+ */
+ function _LMACGallery_getImageById($imageId) {
+	 
+	 
+		if (intval($imageId)== 0) {			
+			return FALSE;			
+		}
+	 
+		$query = db_select("images", "li");
+		$query->addField("li", "imageid");
+		$query->addField("li", "title");
+		$query->addField("li", "tags");
+		$query->addField("li", "url");
+		$query->addField("li", "permlink");
+		$query->addField("li", "author");
+		$query->condition('imageid', $imageId);
+		$query->range(0, 1);
+		$result = $query->execute();
+		$image = $result->fetchAssoc();
+		
+		if ($image != FALSE) {
+			$image['hiveLink'] = '@' . $image['author'] . '/' . $image['permlink'];
+		}
+		
+		return $image;
+ }		
+ 
+/**
+ * The page callback of the image page.
+ */
+ function LMACGallery_imagePage($imageId) {
+	 
+	$image = _LMACGallery_getImageById($imageId);
+	if (! $image) {
+		drupal_not_found();
+		return;
+	}
+	
+	drupal_set_title(t('Image by @!author', array('!author'=>$image['author'])));
+	drupal_add_css(drupal_get_path('module', 'LMACGallery').'/LMACGallery.css');
+	drupal_add_js(drupal_get_path('module', 'LMACGallery').'/LMACGallery.image.js');
+	drupal_add_js(array('LMACGalleryImage' => $image), array('type' => 'setting'));
+	
+	return array(
+		'#type' => 'markup',
+		'#markup' => theme('gallery_image_page', array('image'=>$image))
+	);
+ }
+ 
