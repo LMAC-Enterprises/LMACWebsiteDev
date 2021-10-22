@@ -9,6 +9,8 @@
  
  function LMACGallery_admin_configuration_form($form, &$form_state) {
 
+	global $user;
+ 
 	$form['#attached']['css'][] = drupal_get_path('module', 'LMACGallery').'/LMACGallery.admin.css';
  
 	$form['hidegroup'] = array(
@@ -68,18 +70,30 @@
 		'#submit' 	=> array('LMACGallery_admin_configuration_form_submit'),
     );
 	
+ 
 	$form['ratings_group'] = array(
 		'#type'  => 'fieldset',
 		'#title' => t('Ratings'),
 		'#description' => t('Never hit the "DELETE ALL RATINGS" button unless you want to delete ALL ratings from ALL images in the gallery.'),
-		'#attributes' => array('onclick'=>'return confirm("Are you sure? Press \'yes\' if you want to delete all ratings.");')
+		'#access' => user_access('delete lmac_gallery ratings', $user)
+	);
+	
+	$form['ratings_group']['confirm_delete_ratings_password'] = array(
+		'#type'  => 'password',
+		'#title' => t('Confirm by entering your password.'),
+		'#size' => 32,
+		'#access' => user_access('delete lmac_gallery ratings', $user)
 	);
 	
 	$form['ratings_group']['ratings'] = array(
 		'#type'  => 'submit',
 		'#value' => t('Delete all ratings'),
 		'#submit' => array('LMACGallery_admin_deleteRatings_submit'),
+		'#attributes' => array('onclick'=>'return confirm("Are you sure? Press \'yes\' if you want to delete all ratings.");'),
+		'#access' => user_access('delete lmac_gallery ratings', $user)
 	);
+ 
+	
 		
 	$form['#rebuild'] = True;
 	
@@ -88,8 +102,20 @@
  
  function LMACGallery_admin_deleteRatings_submit($form, &$form_state) {
 	
+	global $user;
+	
+	require_once DRUPAL_ROOT . '/' . variable_get('password_inc', 'includes/password.inc');
+	 
+	if (! user_check_password($form_state['input']['confirm_delete_ratings_password'], $user)) {
+		drupal_set_message('Error. The password you have entered doesn\'t match.', 'error');
+		return;
+	}
+	
+	
 	db_delete(' lmacg_ratings')->execute();
 	cache_clear_all();
+	
+	drupal_set_message('All ratings deleted.');
  }
  
  function _LMACGallery_getHideList($makeItemsLinks = False) {
