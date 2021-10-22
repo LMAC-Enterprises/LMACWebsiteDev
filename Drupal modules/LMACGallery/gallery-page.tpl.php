@@ -25,7 +25,7 @@ foreach($images as $image) {
 	<?php
 	}
 	?>
-	<a href="<?php print $image['url']; ?>" title="Click to open" class="gallerypick" id="gallerypick_<?php print $image['imageid']; ?>"><img src="<?php print $image['thumbnailUrl']; ?>" alt="Image"/></a>
+	<a href="/lmac_gallery-image/<?php print $image['imageid']; ?>" title="Click to open" class="gallerypick" id="gallerypick_<?php print $image['imageid']; ?>"><img src="<?php print $image['thumbnailUrl']; ?>" alt="Image"/></a>
 </div>
 <?php
 }
@@ -46,16 +46,16 @@ foreach($images as $image) {
 	<table>
 			<tbody>
 				<tr>
-					<td>Title:</td><td><a id="lmacg_titleData" href="" target="_blank">-</a></td>
+					<td>Title:</td><td id="lmacg_titleData"></td>
 				</tr>
 				<tr>
-					<td>Author:</td><td><a id="lmacg_authorData" href="" target="_blank">@</a></td>
+					<td>Author:</td><td id="lmacg_authorData"></td>
 				</tr>
 				<tr>
-					<td>Original post:</td><td><a id="lmacg_permlinkData" href="" target="_blank">Click here</a></td>
+					<td>Original post:</td><td id="lmacg_permlinkData"></td>
 				</tr>
 				<tr>
-					<td>Download:</td><td><a id="lmacg_urlData" href="" target="_blank" download>Click here</a></td>
+					<td>Download:</td><td><a id="lmacg_urlData" href="#"><?php print t('Click here'); ?></a></td>
 				</tr>
 			</tbody>
 		</table>
