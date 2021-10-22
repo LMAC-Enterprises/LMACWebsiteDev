@@ -157,3 +157,58 @@
 	text-decoration: none;
 	color: #DDD;
 }
+
+.lmacg-dapp-link {
+	display: inline-block;
+	width: 22px;
+	height: 22px;
+	background-repeat: no-repeat;
+	margin-right: 5px;	
+}
+
+.lmacg-dapp-link.peakd-dapp-icon {
+	background-image: url(images/PeakDLogo.png);
+}
+
+.lmacg-dapp-link.hive-blog-dapp-icon {
+	background-image: url(images/HiveBlogLogo.png);
+}
+
+.lmacg-dapp-link.ecency-dapp-icon {
+	background-image: url(images/Ecency.png);
+}
+
+#lmacg_imagePage-image-container {
+	text-align: center;
+}
+
+#lmacg_imagePage-image-container > img {
+	max-width: 100%;
+}
+
+#lmacg_imagePage-info-container {
+	text-align: left;
+}
+
+.lmacg-image-table-label-col {
+	width: 200px;
+	text-align: left;
+}
+
+.lmacg-image-table-link-col {
+	text-align: left;
+}
+
+#lmacg_imagePage-navigation {
+	margin-bottom: 15px;
+}
+
+#lmacg_imagePage-navigation > a {
+	margin-right: 15px;
+}
+
+#lmac-gallery-image-download-link {
+	margin-top: 15px;
+	display: block;
+	text-align: right;
+}
