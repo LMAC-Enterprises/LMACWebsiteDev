@@ -1,4 +1,3 @@
-import json
 import re
 
 from bs4 import BeautifulSoup
@@ -75,7 +74,7 @@ class HiveAggregator:
     Parameter (contest): A HTML table row string.
     Returns: A winner place number.
     """
-    def getWinnerPlace(self, content):
+    def getWinnerPlace(self, content, tableContent):
 
         if 'First' in content:
             return 1
@@ -98,14 +97,24 @@ class HiveAggregator:
         if 'Seventh' in content:
             return 7
 
-        return 10
+        if 'Top 10' in content:
+            return 10
+
+        return 15
 
     """
     Retrieves all winners from a winner announcement Hive post.
     Parameter (body): A body text from a Hive post.
     Returns: An array of WinnerEntity objects.
     """
-    def getWinners(self, body):
+    def getWinners(self, postBody):
+
+        body = postBody.replace("</td>\n</td>\n</table>", '</td></tr></table>')
+        body = body.replace("<br>", '<br/>"')
+        body = body.replace("width = 400", 'width="400"')
+        body = body.replace("</td>\n</table>", '</td></tr></table>')
+        body = body.replace("</td>\n<tr><td>", '</td></tr><tr><td>')
+        body = body.replace("</td><tr>", '</td></tr><tr>')
 
         winners = []
 
@@ -121,7 +130,7 @@ class HiveAggregator:
                 winner.imageUrl = re.sub(r'^https://images.hive.blog/\d+x\d+/', '', winner.imageUrl)
 
                 placeColumn = linkedImage.find_parent('tr').select_one(":nth-child(1)")
-                winner.place = self.getWinnerPlace(str(placeColumn))
+                winner.place = self.getWinnerPlace(str(placeColumn), str(table))
 
                 matches = re.search(r"\/@(.*?)\/", winner.postUrl, re.DOTALL)
                 if matches:
@@ -147,7 +156,7 @@ class HiveAggregator:
 
         contestEntities = {}
 
-        for post in Discussions_by_author_before_date(limit=100, author=self.accountToListen):
+        for post in Discussions_by_author_before_date(limit=100, author=self.accountToListen, tag="letsmakeacollage"):
 
             if not post.is_main_post():
                 continue
