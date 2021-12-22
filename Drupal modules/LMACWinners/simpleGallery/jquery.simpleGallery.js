@@ -63,6 +63,15 @@
                 view.hide();
                 view_image.attr('src', '');
             });
+            $( ".view").click(function (e) {  
+                if (! $(e.target).is("div")) {
+                  return;
+                }
+                view.hide();
+                view_image.attr('src', '');
+                e.stopPropagation();
+            });
+
             $( ".prev", view ).click(function () {
                 curr_image = prev();
                 viewImage(curr_image);

@@ -30,17 +30,15 @@
 }
 
 #lmac-contest-winners {
-
-	 
+	 padding-top: 15px;
 }
 
 #lmac-contest-winners > h3 {
 	margin-top: 0;
 	margin-bottom: 15px;
 	padding: 2px;
-	border-bottom: 1px solid #ccc;
-	width: 120px;
-	text-align: center;
+   display: block;
+   border-bottom: 1px solid #ccc;
 }
 
 #lmac-contest-info {
@@ -51,19 +49,29 @@
 .lmac-contest-winner-thumbnail-box {
 	display: inline-block;
 	margin-right: 10px;
-	padding-bottom: 20px;
+   margin-bottom: 10px;
 	vertical-align: top;
-	height: auto;
+   background-color: black;
+	height: 300px;
+   position: relative;
+   overflow: hidden;
 }
 
 .lmac-contest-winner-thumbnail-footer {
 	color: #121212;
-    background-color: #ececec;
-	padding: 2px;
+   background-color: #ececec;
+   height: 23px;
+   vertical-align: middle;
+   padding-left: 4px;
+   padding-top: 2px;
 }
 
-.lmac-contest-winner-thumbnail-footer > .lmac-winner-artist-label {
-	margin-left: 5px;
+.lmac-contest-winner-thumbnail-box-image-container {
+   display: table-cell;
+   height: 275px;
+   width: 300px;
+   vertical-align: middle;
+
 }
 
 .lmac-contest-winner-dapps-box {
@@ -71,9 +79,9 @@
     width: 82px;
 	height: 28px;
     z-index: 254;
-	position: relative;
-	top: -43px;
-	right: -210px;
+	position: absolute;
+	top: 260px;
+   left: 210px;
 	padding-left: 2px;
 	padding-top: 4px;
 	display: block;
