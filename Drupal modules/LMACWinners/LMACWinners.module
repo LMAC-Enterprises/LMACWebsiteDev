@@ -7,23 +7,32 @@ function LMACWinners_menu() {
 	$items = array();
 	
 	$items['lmac-winners'] = array(
-		'title' 			=> t('LMAC Winners'),
-		'description'       => t('Overview of all LMAC Winners'), 
-		'page callback' 	=> 'LMACWinners_winnersPage',
-		'page arguments' 	=> array(),
+		'title' 			      => t('LMAC Winners'),
+		'description'        => t('Overview of all LMAC Winners'), 
+		'page callback' 	   => 'LMACWinners_winnersPage',
+		'page arguments' 	   => array(),
 		'access arguments' 	=> array('view lmac_contest'),
 	);	
 	$items['lmac-winners/%'] = array(
-		'page callback' 	=> 'LMACWinners_winnersPage',
-		'page arguments' 	=> array(1),
+		'page callback' 	   => 'LMACWinners_winnersPage',
+		'page arguments' 	   => array(1),
 		'access arguments' 	=> array('view lmac_contest'),
 	);	
 
 	$items['admin/lmac/lmac-winners/%'] = array(
-		'page callback' 	=> 'drupal_get_form',
-		'page arguments' 	=> array('LMACWinners_editRound_form', 3),
+		'page callback' 	   => 'drupal_get_form',
+		'page arguments' 	   => array('LMACWinners_editRound_form', 3),
 		'access arguments' 	=> array('administer lmac_contest'),
-      'file' => 'LMACWinners.admin.inc'
+      'file'               => 'LMACWinners.admin.inc'
+	);	
+
+	$items['admin/lmac/lmac-winners/new'] = array(
+		'title' 			      => t('Add a new contest'),
+		'description'        => t('Provides a form to add a new contest to the winners gallery.'), 
+		'page callback' 	   => 'drupal_get_form',
+		'page arguments' 	   => array('LMACWinners_editRound_form', 3),
+		'access arguments' 	=> array('administer lmac_contest'),
+      'file'               => 'LMACWinners.admin.inc'
 	);	
 		
 	return $items;
@@ -222,6 +231,8 @@ function _LMACWinners_getContest($round) {
 		$winner['imageThumbnailUrl'] = 'https://images.hive.blog/300x0/' . str_replace('https://images.hive.blog/0x0/', '', $winner['imageUrl']);
 		$contest->winners[] = $winner;
 	}
+
+   $contest->groupedWinners = _LMACWinners_splitWinnersIntoTopGroups($contest->winners);
 		
 	return $contest;
 }
@@ -319,3 +330,24 @@ function _LMACWinners_renderDappLinks($dappUrls) {
 	));
 }
  
+function _LMACWinners_splitWinnersIntoTopGroups($winners) {
+   $groups = [5=>[], 10=>[], 15=>[]];
+
+   foreach($winners as $winner) {
+
+      $winnerObject = (object)$winner;
+
+      if ($winnerObject->winningPlace <= 5) {
+         $groups[5][] = $winner;
+         continue;
+      }
+      if ($winnerObject->winningPlace > 5 && $winnerObject->winningPlace <= 10) {
+         $groups[10][] = $winner;
+         continue;
+      }
+      $groups[15][] = $winner;
+   }
+ 
+   return $groups;
+}
+
