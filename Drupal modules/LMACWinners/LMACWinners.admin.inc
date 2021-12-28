@@ -9,13 +9,30 @@ function LMACWinners_editRound_form($form, &$form_state) {
       return;
    }
 
-   $contestId = (int)$form_state['build_info']['args'][0];
-   $contest = _LMACWinners_loadContest($contestId);
+   if ($form_state['build_info']['args'][0] == 'new') {
+      $contest = _LMACWinners_createContestNullObject();
+   }else{
+      $contestId = (int)$form_state['build_info']['args'][0];
+      $contest = _LMACWinners_loadContest($contestId);
+   }
 
-   $form['contestId'] = array(
-      '#type' => 'value',
-      '#value' => $contest->contestId,
-   );
+   if ($contest->contestId == 0) {
+      $form['contestId'] = array(
+         '#type' => 'textfield',
+         '#title' => t('Contest Id:'),
+         '#description' => t('The number of the contest round.'),
+         '#default_value' => $contest->contestId,
+      );
+      $form['isNew'] = array(
+         '#type' => 'value',
+         '#value' => TRUE
+      );
+   }else{
+      $form['contestId'] = array(
+         '#type' => 'value',
+         '#value' => $contest->contestId,
+      );
+   }
 
    $form['title'] = array(
       '#type' => 'textfield',
@@ -51,47 +68,56 @@ function LMACWinners_editRound_form($form, &$form_state) {
       '#collapsed' => FALSE,
       '#tree' => TRUE
    );
-
-   foreach($contest->winners as $artist=>$winner) {
-      $form['winners'][$artist] = array(
-         '#type' => 'fieldset',
-         '#title' => $artist,
-         '#collapsible' => TRUE, 
-         '#collapsed' => TRUE,
-         '#tree' => TRUE
-      );
-      $form['winners'][$artist]['artist'] = array(
-         '#type' => 'textfield',
-         '#title' => t('Artist:'),
-         '#default_value' => $winner['artist'],
-         '#size' => 32,
-         '#maxlength' => 512
-      );
-      $form['winners'][$artist]['winningPlace'] = array(
-         '#type' => 'textfield',
-         '#title' => t('Winning place:'),
-         '#default_value' => $winner['winningPlace'],
-         '#size' => 2,
-         '#maxlength' => 2
-      );
-      $form['winners'][$artist]['postUrl'] = array(
-         '#type' => 'textfield',
-         '#title' => t('Post url:'),
-         '#default_value' => $winner['postUrl'],
-         '#size' => 120,
-         '#maxlength' => 512
-      );
-      $form['winners'][$artist]['imageUrl'] = array(
-         '#type' => 'textfield',
-         '#title' => t('Image url:'),
-         '#default_value' => $winner['imageUrl'],
-         '#size' => 120,
-         '#maxlength' => 512
-      );
-      $form['winners'][$artist]['delete'] = array(
-         '#type' => 'checkbox',
-         '#title' => t('Delete entry')
-      );
+   
+   if ($contest->contestId == 0) {
+         $form['winners']['message'] = array(
+            '#type' => 'markup',
+            '#markup' => t('Save the contest first, then add winners.'),
+            '#prefix' => '<p>',
+            '#suffix' => '</p>'
+         );
+   }else{
+      foreach($contest->winners as $artist=>$winner) {
+         $form['winners'][$artist] = array(
+            '#type' => 'fieldset',
+            '#title' => $artist,
+            '#collapsible' => TRUE, 
+            '#collapsed' => TRUE,
+            '#tree' => TRUE
+         );
+         $form['winners'][$artist]['artist'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Artist:'),
+            '#default_value' => $winner['artist'],
+            '#size' => 32,
+            '#maxlength' => 512
+         );
+         $form['winners'][$artist]['winningPlace'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Winning place:'),
+            '#default_value' => $winner['winningPlace'],
+            '#size' => 2,
+            '#maxlength' => 2
+         );
+         $form['winners'][$artist]['postUrl'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Post url:'),
+            '#default_value' => $winner['postUrl'],
+            '#size' => 120,
+            '#maxlength' => 512
+         );
+         $form['winners'][$artist]['imageUrl'] = array(
+            '#type' => 'textfield',
+            '#title' => t('Image url:'),
+            '#default_value' => $winner['imageUrl'],
+            '#size' => 120,
+            '#maxlength' => 512
+         );
+         $form['winners'][$artist]['delete'] = array(
+            '#type' => 'checkbox',
+            '#title' => t('Delete entry')
+         );
+      }
    }
 
    $form['submit'] = array(
@@ -105,47 +131,64 @@ function LMACWinners_editRound_form($form, &$form_state) {
       '#value' => t('Back to the gallery'),
       '#submit' => array('_LMACWinners_back_submit'),
    );
+   
+   if ($contest->contestId > 0) {
+      $form['newWinner'] = array(
+         '#type' => 'fieldset',
+         '#title' => t('New winner entry'),
+         '#collapsible' => FALSE, 
+         '#collapsed' => FALSE,
+         '#tree' => TRUE
+      );
 
-   $form['newWinner'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('New winner entry'),
-      '#collapsible' => FALSE, 
-      '#collapsed' => FALSE,
-      '#tree' => TRUE
-   );
-
-   $form['newWinner']['artist'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Artist:'),
-      '#size' => 32,
-      '#maxlength' => 512
-   );
-   $form['newWinner']['winningPlace'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Winning place:'),
-      '#size' => 2,
-      '#maxlength' => 2
-   );
-   $form['newWinner']['postUrl'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Post url:'),
-      '#size' => 120,
-      '#maxlength' => 512
-   );
-   $form['newWinner']['imageUrl'] = array(
-      '#type' => 'textfield',
-      '#title' => t('Image url:'),
-      '#size' => 120,
-      '#maxlength' => 512
-   );
-   $form['newWinner']['submit'] = array(
-      '#type' => 'submit',
-      '#value' => t('Add'),
-      '#submit' => array('_LMACWinners_editRound_addWinner_submit'),
-   );
+      $form['newWinner']['artist'] = array(
+         '#type' => 'textfield',
+         '#title' => t('Artist:'),
+         '#size' => 32,
+         '#maxlength' => 512
+      );
+      $form['newWinner']['winningPlace'] = array(
+         '#type' => 'textfield',
+         '#title' => t('Winning place:'),
+         '#size' => 2,
+         '#maxlength' => 2
+      );
+      $form['newWinner']['postUrl'] = array(
+         '#type' => 'textfield',
+         '#title' => t('Post url:'),
+         '#size' => 120,
+         '#maxlength' => 512
+      );
+      $form['newWinner']['imageUrl'] = array(
+         '#type' => 'textfield',
+         '#title' => t('Image url:'),
+         '#size' => 120,
+         '#maxlength' => 512
+      );
+      $form['newWinner']['submit'] = array(
+         '#type' => 'submit',
+         '#value' => t('Add'),
+         '#submit' => array('_LMACWinners_editRound_addWinner_submit'),
+      );
+   }
 
 
    return $form;
+}
+
+/*
+ * Creates and returns a contest NULL object.
+ * @returns a NULL object. 
+ **/
+function _LMACWinners_createContestNullObject() {
+   
+   return (object)[
+      'contestId' => 0,
+      'title' => '',
+      'postUrl' => '',
+      'templateImageUrl' => '',
+      'winners' => []
+   ];
 }
 
 /*
@@ -198,16 +241,18 @@ function _LMACWinners_editRound_submit($form, &$form_state) {
    $contest = (object)$form_state['values'];
 
    $processedWinners = [];
-   foreach($contest->winners as $winner){
-      if ($winner['delete'] !== 0) {
-         continue;
+   if (isset($contest->winners)) {
+      foreach($contest->winners as $winner){
+         if ($winner['delete'] !== 0) {
+            continue;
+         }
+      
+         unset($winner['delete']);
+         $processedWinners[$winner['artist']] = $winner;
       }
-   
-      unset($winner['delete']);
-      $processedWinners[$winner['artist']] = $winner;
    }
 
-   _LMACWinners_saveContest($contest->contestId, $contest->title, $contest->postUrl, $contest->templateImageUrl, $processedWinners);
+   _LMACWinners_saveContest($contest->contestId, $contest->title, $contest->postUrl, $contest->templateImageUrl, $processedWinners, isset($contest->isNew));
    drupal_set_message('Contest saved.');
    drupal_goto('lmac-winners/' . $contest->contestId);
 }

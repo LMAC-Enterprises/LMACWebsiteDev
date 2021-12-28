@@ -41,6 +41,15 @@
    border-bottom: 1px solid #ccc;
 }
 
+#lmac-contest-winners > h4 {
+	margin-top: 0;
+	margin-bottom: 15px;
+	padding: 2px;
+   display: block;
+   border-bottom: 1px solid #ccc;
+}
+ 
+
 #lmac-contest-info {
 	border-bottom: 1px solid #ccc;
 	padding-bottom: 15px;
