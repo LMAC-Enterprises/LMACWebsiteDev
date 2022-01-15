@@ -17,3 +17,6 @@ class ContestWinnerEntity:
             'imageUrl': self.imageUrl,
             'postUrl': self.postUrl
         }
+
+    def __str__(self):
+        return str(self.tojson())

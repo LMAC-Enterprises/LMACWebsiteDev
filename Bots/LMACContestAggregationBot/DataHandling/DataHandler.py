@@ -15,7 +15,9 @@ class DataHandler:
                 host=mysqlServerAddress,
                 user=mysqlUser,
                 password=mysqlPassword,
-                database=mysqlDatabase
+                database=mysqlDatabase,
+                charset='utf8',
+                use_unicode=True
             )
         except Exception as e:
             self.logger.error(
@@ -35,6 +37,7 @@ class DataHandler:
 
     def _getJsonFromWinnersDict(self, winners: dict):
         output = {}
+
         for artist, entity in winners.items():
             output.update({artist: entity.tojson()})
 
@@ -46,14 +49,15 @@ class DataHandler:
         for contestEntity in contests.values():
             if int(contestEntity.contestId) in self._contestLookup.keys():
                 continue
-
+            print(contestEntity.contestId)
+            print(contestEntity.title)
             cursor.execute(
                 "INSERT INTO lmac_contests (contestId, title, postUrl, templateImageUrl, winners) VALUES (%s, %s, %s, %s, %s)",
                 (
                     contestEntity.contestId,
-                    contestEntity.title,
-                    contestEntity.postUrl,
-                    contestEntity.templateImageUrl,
+                    contestEntity.title.encode('ascii', 'ignore'),
+                    contestEntity.postUrl.encode('ascii', 'ignore'),
+                    contestEntity.templateImageUrl.encode('ascii', 'ignore'),
                     self._getJsonFromWinnersDict(contestEntity.winners)
                 ))
 

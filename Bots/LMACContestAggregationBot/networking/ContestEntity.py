@@ -12,4 +12,11 @@ class ContestEntity:
         self.templateImageUrl = templateImageUrl
         self.postUrl = postUrl
 
+    def __str__(self):
+        return str({
+            'contestId': self.contestId,
+            'title': self.title,
+            'templateImageUrl': self.templateImageUrl,
+            'postUrl': self.postUrl,
+        })
 
