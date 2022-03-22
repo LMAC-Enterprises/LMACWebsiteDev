@@ -212,3 +212,21 @@
 	display: block;
 	text-align: right;
 }
+
+
+.lmacg_paginationList {
+   text-align: center;
+}
+
+.lmacg_paginationList > li.disabled {
+   color: gray;
+}
+
+.lmacg_paginationList > li.active {
+   text-decoration: underline;
+}
+
+.lmacg_paginationList > li.active > a {
+   color: black;
+   font-weight: bold;
+}

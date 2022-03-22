@@ -8,25 +8,39 @@
 
 const TRUNCATE_DOTS = '...';
 const MAX_IMAGE_TITLE_LENGTH = 36;
+const ALL_IMAGES_QUERY_STRING = 'all-images';
+const MAX_IMAGES_PER_PAGE = 29;
 
 /**
  * Implements hook_menu()
  */
 function LMACGallery_menu() {
     $items = array();
-	$items['lmac_gallery'] = array(
+	$items['lil-gallery'] = array(
 		'title'             =>  t('Gallery'),
 		'description'       =>  t('Show the images of the LMAC Image Gallery'),
 		'page callback' 	=> 'LMACGallery_page',
 		'access callback'   =>  true,
 	);	
-	$items['lmac_gallery/%'] = array(
-		'title'             =>  t('Gallery'),
-		'description'       =>  t('Show the images of the LMAC Image Gallery'),
+	$items['lil-gallery/%'] = array(
 		'page callback' 	=> 'LMACGallery_page',
 		'page arguments' 	=> array(1),
 		'access callback'   =>  true,
 	);
+	$items['lmac_gallery'] = array(
+		'page callback' => 'LMACGallery_page',
+		'access callback'   =>  true,
+	);	
+	$items['lmac_gallery/%'] = array(
+		'page callback' 	=> 'LMACGallery_page',
+		'page arguments' 	=> array(1),
+		'access callback'   =>  true,
+	);
+	$items['lil-gallery-image/%'] = array(
+		'page callback' 	=> 'LMACGallery_imagePage',
+		'page arguments' 	=> array(1),
+		'access callback'   =>  true,
+	);	
 	$items['lmac_gallery-image/%'] = array(
 		'page callback' 	=> 'LMACGallery_imagePage',
 		'page arguments' 	=> array(1),
@@ -181,9 +195,13 @@ function LMACGallery_schema() {
 function LMACGallery_lmacDialogs() {
 	return array(
 		'lmacGalleryDownloadInfo' => array(
-			'#type' => 'messagebox',
+			'#type' => 'downloadboxwithindicator',
 			'#title' => t('Download image'),
-			'#message' => t('If using this image, please add @authorXY as 2% beneficiary to your Hive post. Also include the #lil tag to help our curators finding your post. Thank you!') . '<br/><a id="lmac-gallery-image-download-link" href="downloadHref" target="_blank" download="download">' . t('Click to download') . '</a>',
+			'#message' => t('If using this image, please add @authorXY as 2% beneficiary to your Hive post. Also include the #lil tag to help our curators finding your post. Thank you!'),
+			'#snippetdescription' => t('Please add this Markdown snippet to your Hive post to indicate where you got the image from.'),			
+			'#snippet' => '[<center>![lil_image_preview.jpg](https://images.hive.blog/300x0/#downloadHref)<br/>Contributed to the #LIL by @authorXY.</center>](galleryImageUrl)',			
+			'#linktitle' => t('Click to download'),
+			'#href' => '#downloadHref', // Replacement marker
 			'#urls' => array(
 				'lmac_gallery',
 				'lmac_gallery/*',
@@ -236,8 +254,11 @@ function LMACGallery_form_LMACGallery_search_form_alter(&$form, $form_state, $fo
 		return;
 	}
 	
-	if (isset($_GET['q']) && strpos($_GET['q'], 'lmac_gallery/') === 0) {
+	if (isset($_GET['q']) && (strpos($_GET['q'], 'lil-gallery/') === 0 || strpos($_GET['q'], 'lmac_gallery/') === 0)) {
 		$keywordsFallback = explode('/', $_GET['q'])[1];
+		if ($keywordsFallback == ALL_IMAGES_QUERY_STRING) {
+			$keywordsFallback = '';	
+		}
 	}else{
 		$keywordsFallback = '';
 	}
@@ -257,22 +278,25 @@ function LMACGallery_form_LMACGallery_search_form_alter(&$form, $form_state, $fo
  *   The page content.
  */
 function LMACGallery_page($q="", $pageNo=0) {
-	
-	$q = check_plain($q);
-	$q = preg_replace("/[^A-Za-z0-9, ]/", '', $q);
+
+	$q = trim(check_plain($q));
+	$q = preg_replace("/[^A-Za-z0-9\-, ]/", '', $q);
+	if (empty($q)) {
+		$q = ALL_IMAGES_QUERY_STRING;
+	}
+	$pageNo = intval($pageNo);
 	
 	drupal_add_js(drupal_get_path('module', 'LMACGallery').'/LMACGallery.js');
 	drupal_add_css(drupal_get_path('module', 'LMACGallery').'/LMACGallery.css');
-	drupal_add_js(array('LMACGallery' => array('dapp' => variable_get('LMACGallery_dapp', 'https://hive.blog/'))), array('type' => 'setting'));
-
-	$images = _LMACGallery_getImages(_LMACGallery_getSearchQueryFragments($q));
+ 
+	$images = _LMACGallery_getImages(_LMACGallery_getSearchQueryFragments($q == ALL_IMAGES_QUERY_STRING ? '' : $q));
 	$imagesAmount = count($images);
 	if ($imagesAmount == 0) {
 		drupal_set_message(t('No images could be found for the requested search terms.'), 'error');
 		$chunks = [];
 	}else{
 	
-		$chunks = array_chunk($images, 29, TRUE);
+		$chunks = array_chunk($images, MAX_IMAGES_PER_PAGE, TRUE);
 		
 		if ($pageNo < 0) {
 			$pageNo = 0;
@@ -285,10 +309,11 @@ function LMACGallery_page($q="", $pageNo=0) {
 		}
 	}	
 	
-	$previousPageUrl = '/lmac_gallery/' . $q . '/'. ($pageNo - 1);
-	$nextPageUrl = '/lmac_gallery/' .  $q . '/'. ($pageNo + 1);
-	$firstPageUrl = '/lmac_gallery/' . $q . '/0';
-	$lastPageUrl = '/lmac_gallery/' . $q . '/' . (count($chunks) - 1);
+	//$previousPageUrl = '/lil-gallery/' . $q . '/'. ($pageNo - 1);
+	//$nextPageUrl = '/lil-gallery/' .  $q . '/'. ($pageNo + 1);
+	//$firstPageUrl = '/lil-gallery/' . $q . '/0';
+	//$lastPageUrl = '/lil-gallery/' . $q . '/' . (count($chunks) - 1);
+   $pagination = _LMACGallery_renderPagination($q, $imagesAmount, $pageNo);
 	
 	return array(
 		'searchForm' => drupal_get_form('LMACGallery_search_form'),
@@ -299,10 +324,68 @@ function LMACGallery_page($q="", $pageNo=0) {
 			'#suffix' => '</em>'
 		),
 		'gallery' => array(
-			'#markup'=>count($chunks) > 0 ? theme('gallery_page', array('handPicked'=>variable_get('LMACGallery_curationPicks', array()),'images'=>$chunks[$pageNo], 'pageNo'=>$pageNo, 'pagesTotal'=>count($chunks), 'firstPageUrl'=>$firstPageUrl, 'lastPageUrl'=>$lastPageUrl, 'previousPageUrl'=>$previousPageUrl, 'nextPageUrl'=>$nextPageUrl, 'imagesJson'=>_LMACGallery_createImagesJson($chunks[$pageNo]))) : t('No images found.')
+			'#markup'=>count($chunks) > 0 ? theme('gallery_page', array('handPicked'=>variable_get('LMACGallery_curationPicks', array()),'images'=>$chunks[$pageNo], 'pagination'=>$pagination, 'pageNo'=>$pageNo, 'pagesTotal'=>count($chunks), /*'firstPageUrl'=>$firstPageUrl, 'lastPageUrl'=>$lastPageUrl, 'previousPageUrl'=>$previousPageUrl, 'nextPageUrl'=>$nextPageUrl,*/ 'imagesJson'=>_LMACGallery_createImagesJson($chunks[$pageNo]))) : t('No images found.')
 		)
 	);
 }
+
+/**
+ * Generates an HTML paginator.
+ *
+ * @param $searchQuery
+ *		The search query input
+ * @param $imagesAmount
+ *		The amount of all images matching to the search query.
+ * @param $pageNo
+ *		The number of the current page.
+ * @return
+ *   The cache Id.
+ */
+function _LMACGallery_renderPagination($searchQuery, $imagesAmount, $pageNo) {
+   $pageNo = intval($pageNo) > 0 ? $pageNo : 1;
+   $links = 5;
+
+
+   $last       = ceil($imagesAmount / MAX_IMAGES_PER_PAGE) -1;
+
+   $start      = ( ( $pageNo - $links ) > 0 ) ? $pageNo - $links : 1;
+   $end        = ( ( $pageNo + $links ) < $last ) ? $pageNo + $links : $last;
+
+   $html       = '<ul class="lmacg_paginationList">';
+
+   $class      = ($pageNo == 1 ) ? "disabled" : "";
+   if ($pageNo > 1) {
+      $html       .= '<li class="' . $class . '"><a href="/lil-gallery/' . $searchQuery . '/' . ($pageNo - 1 ) . '">&laquo;</a></li>';
+   }else{
+      $html       .= '<li class="' . $class . '">&laquo;</li>';
+   }
+
+   if ( $start > 1 ) {
+     $html   .= '<li><a href="/lil-gallery/' . $searchQuery . '/1">1</a></li>';
+     $html   .= '<li class="disabled"><span>...</span></li>';
+   }
+
+   for ( $i = $start ; $i <= $end; $i++ ) {
+     $class  = ($pageNo == $i ) ? "active" : "";
+     $html   .= '<li class="' . $class . '"><a href="/lil-gallery/' . $searchQuery . '/' . $i . '">' . $i . '</a></li>';
+   }
+
+   if ( $end < $last ) {
+     $html   .= '<li class="disabled"><span>...</span></li>';
+     $html   .= '<li><a href="/lil-gallery/' . $searchQuery . '/'  . $last . '">' . $last . '</a></li>';
+   }
+
+   if ($pageNo >= $last) {
+      $html .= '<li class="disabled">&raquo;</li>';
+   }else{
+      $html .= '<li><a href="/lil-gallery/' . $searchQuery . '/' . ($pageNo + 1) . '">&raquo;</a></li>';
+   }
+
+   $html .= '</ul>';
+
+   return $html;
+}
+
 
 /**
  * Retrieves the cache Id for a specific search input.
@@ -405,11 +488,35 @@ function _LMACGallery_getImages($searchInputFragments) {
  * @return
  *   An array of search terms.
  */
-function _LMACGallery_getSearchQueryFragments($searchQuery) {
+function _LMACGallery_getSearchQueryFragments($searchQuery, $wildcardMode = FALSE) {
  	
 	$searchQuery = trim($searchQuery);
 	
-	return implode(' ', array_diff(explode(',', str_replace(array(',', '-', '+', ' ', '	'), ',', $searchQuery)), array('')));
+	$fragments = array_diff(explode(',', str_replace(array('(', ')', '"', "'", ',', '-', '+', ' ', '	'), ',', $searchQuery)), array(''));
+	$safeFragments = [];
+
+	if (count($fragments) > 6) {
+		$fragments = array_slice($fragments, 0, 6);
+	}
+
+	foreach($fragments as $fragment) {
+		if (strlen($fragment) < 3) {
+			continue;
+		}
+
+		if (strlen($fragment) > 32) {
+			$fragment = substr($fragment, 0, 32);
+		}
+		
+		if ($wildcardMode) {
+			$safeFragments[] = $fragment . 's';
+		}
+
+		$safeFragments[] = $fragment;
+	}
+
+	
+	return implode(' ', $safeFragments);
 }
 
 /**
@@ -430,7 +537,7 @@ function _LMACGallery_dbFetchImagesByTags($query, $urlSearchQuery) {
 	}
  
 	$expression = 'MATCH(li.tags, li.author) AGAINST (:search IN BOOLEAN MODE)';
-	$query->where($expression, [':search' => _LMACGallery_getSearchQueryFragments($urlSearchQuery)]);
+	$query->where($expression, [':search' => _LMACGallery_getSearchQueryFragments($urlSearchQuery, TRUE)]);
 }
 
 
