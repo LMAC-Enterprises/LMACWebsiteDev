@@ -1,0 +1,195 @@
+<?php
+/**
+ * Implements hook_menu().
+ */
+function LMACGalleryTags_menu() {
+	
+	$items = array();
+	
+	$items['lil-gallery-tags'] = array(
+      'title'              => 'Gallery Tags',
+      'description'        => 'A page containing a tag cloud and a table for all tags used in the gallery.',
+		'page callback' 	   => 'LMACGalleryTags_cloudPage',
+		'access arguments'   => array('view lmac_gallerytags')
+	);
+
+   $items['lil-gallery-tags/cloud'] = array(
+      'title'              => 'Top 100 Cloud',
+      'type'               => MENU_DEFAULT_LOCAL_TASK,
+      'weight'             => -10,
+		'access arguments'   => array('view lmac_gallerytags')
+   );
+
+   $items['lil-gallery-tags/all'] = array(
+      'title'              => 'All tags',
+      'type'               => MENU_LOCAL_TASK,
+      'page callback'      => 'LMACGalleryTags_allTagsPage',
+		'access arguments'   => array('view lmac_gallerytags')
+   );
+
+
+	
+	return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function LMACGalleryTags_permission() {
+  return array(
+    'view lmac_gallerytags' => array(
+      'title' => t('View LMAC Gallery')
+    )
+  );
+}
+
+
+/**
+ * Implements hook_schema().
+ */
+function LMACGalleryTags_schema() {
+	
+	$schema['LMACGalleryTags'] = array(
+		'description' => 'Table to register tags used for images in the LIL gallery.',
+ 
+		'fields' => array(
+			'tagText' => array(
+				'description' => 'The primary identifier and tag text.',
+				'type' => 'varchar',
+				'length' => 256,
+				'not null' => TRUE,
+			),
+			'hits' => array(
+				'description' => 'Amount of images using this the tag.',
+				'type' => 'int',
+				'not null' => TRUE,
+            'unsigned' => TRUE,
+				'default' => 0,
+			)
+		),
+		'primary key' => array(
+			'tagText'
+		),
+	);
+	return $schema;
+}
+
+/**
+ * Implements hook_theme()
+ */
+function LMACGalleryTags_theme() {
+ 
+	$themes = array();
+	$themes['tags_cloud_page'] = array(
+		'template' => 'tags-cloud-page',
+		'path' => drupal_get_path('module', 'LMACGalleryTags'),
+	);
+
+	$themes['tags_all_page'] = array(
+		'template' => 'tags-all-page',
+		'path' => drupal_get_path('module', 'LMACGalleryTags'),
+	);
+
+    return $themes;
+}
+
+/**
+ * Page callback of /lil-gallery-tags.
+ */
+function LMACGalleryTags_cloudPage() {
+
+   $settings = _LMACGalleryTags_getSettings();
+
+   drupal_add_js(drupal_get_path('module', 'LMACGalleryTags').'/thirdparty/tagcanvas/jquery.tagcanvas.min.js');
+   drupal_add_css(drupal_get_path('module', 'LMACGalleryTags').'/LMACGalleryTags.css');
+
+   $tags = _LMACGalleryTags_loadTags();
+
+
+   return array(
+      '#type'     => 'markup',
+      '#markup'   => theme('tags_cloud_page', array('tags'=>$tags, 'tagWeights'=>_LMACGalleryTags_createWeights($tags), 'settings'=>$settings))
+   );
+}
+
+/**
+ * Page callback of /lil-gallery-tags/all.
+ */
+function LMACGalleryTags_allTagsPage() {
+   
+   drupal_add_css(drupal_get_path('module', 'LMACGalleryTags').'/LMACGalleryTags-all-tags.css');
+   drupal_add_js(drupal_get_path('module', 'LMACGalleryTags').'/LMACGalleryTags.allTags.js');
+   $tags = _LMACGalleryTags_loadTags(1000);
+
+   arsort($tags);
+
+   return array(
+      '#type'     => 'markup',
+      '#markup'   => theme('tags_all_page', array('tags'=>$tags, 'tagWeights'=>_LMACGalleryTags_createWeights($tags)))
+   );
+}
+
+/**
+ * Retrieves the module settings.
+ * @return An array of module settings.
+ */
+function _LMACGalleryTags_getSettings() {
+   
+   return variable_get('LMACGalleryTags', array(
+      'cloud' => array(
+         'minimumTags'     => 100,
+         'maximumSpeed'    => 0.03,
+         'frontSelect'     => FALSE,
+         'dragControl'     => TRUE
+      )
+   ));
+}
+
+/**
+ * Set a specific setting of the module.
+ * @param $settingsKey  Name of the setting.
+ * @param $settingsValue Value of the setting.
+ * @return An array of module settings.
+ */
+function _LMACGalleryTags_setSettings($settingsKey, $settingValue) {
+   $settings = _LMACGalleryTags_getSettings();
+   $settings[$settingsKey] = $settingsValue;
+	variable_set('LMACGalleryTags', $settings);
+}
+
+function _LMACGalleryTags_createWeights($tags) {
+   $tagWeights = array();
+
+   $highestTagUseAmount = 0.0;
+   foreach(array_keys($tags) as $tag) {
+      if ($highestTagUseAmount < $tags[$tag]) {
+         $highestTagUseAmount = (float)$tags[$tag];
+      }
+   }
+
+   foreach(array_keys($tags) as $tag) {
+      $tagWeights[$tag] = (1.0 / $highestTagUseAmount) * $tags[$tag];
+   }
+
+   return $tagWeights;
+}
+
+function _LMACGalleryTags_loadTags($limit = 100) {
+
+   $query = db_select('LMACGalleryTags', 't');   
+   $query->addField('t', 'tagText');
+   $query->addField('t', 'hits');
+   $query->orderBy('hits', 'DESC');
+   $query->range(0, $limit);
+   $results = $query->execute();
+   $tagHitMap = array();
+   
+   while ($row = $results->fetchAssoc()) {
+      $tagHitMap[$row['tagText']] = $row['hits'];
+   }  
+
+   return $tagHitMap;
+}
+
+function LMACGalleryTags_cron() {}
+

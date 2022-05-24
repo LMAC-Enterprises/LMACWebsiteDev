@@ -1,0 +1,15 @@
+.tags {
+   width: 99.999%
+   
+}
+
+#tagCloudCanvas {
+   display: block;
+   min-width: 300px;
+   background-image: url("images/canvasbackground.png");
+   background-position: center;
+   background-repeat: no-repeat;
+   background-size: contain;
+}
+
+
