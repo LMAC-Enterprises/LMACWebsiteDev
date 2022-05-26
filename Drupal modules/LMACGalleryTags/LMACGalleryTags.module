@@ -27,7 +27,14 @@ function LMACGalleryTags_menu() {
 		'access arguments'   => array('view lmac_gallerytags')
    );
 
-
+	$items['admin/lmac/lmacgallerytags'] = array(
+		'title' 			      => t('Administer gallery tag pages'),
+		'description'        => t('Configure the gallery tag pages.'), 
+		'page callback' 	   => 'drupal_get_form',
+		'page arguments' 	   => array('LMACGalleryTags_admin_form'),
+		'access arguments' 	=> array('administer lmac_gallerytags'),
+		'file' 				   => 'LMACGalleryTags.admin.inc',
+	);
 	
 	return $items;
 }
@@ -38,6 +45,9 @@ function LMACGalleryTags_menu() {
 function LMACGalleryTags_permission() {
   return array(
     'view lmac_gallerytags' => array(
+      'title' => t('View LMAC Gallery')
+    ),
+    'administer lmac_gallerytags' => array(
       'title' => t('View LMAC Gallery')
     )
   );
@@ -151,7 +161,7 @@ function _LMACGalleryTags_getSettings() {
  * @param $settingsValue Value of the setting.
  * @return An array of module settings.
  */
-function _LMACGalleryTags_setSettings($settingsKey, $settingValue) {
+function _LMACGalleryTags_setSettings($settingsKey, $settingsValue) {
    $settings = _LMACGalleryTags_getSettings();
    $settings[$settingsKey] = $settingsValue;
 	variable_set('LMACGalleryTags', $settings);
