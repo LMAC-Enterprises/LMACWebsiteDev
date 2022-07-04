@@ -4,7 +4,6 @@
 	width: auto;
 }
  
-
 .lmacg_thumbnailFooter {
 	text-align: center;
 	color: #121212;
@@ -136,12 +135,40 @@
 }
 
 #lmacgallery-search-form .form-item {
-	display: inline;
+	display: inline-block;
 }
 
-#lmacgallery-search-form .form-text {
-	max-width: 220px;
+#lmacgallery-search-form .form-type-item {
+	display: block;
 }
+
+#lmacgallery-search-form .form-item-sq {
+   width: 250px;
+   border: none;
+   display: inline;
+}
+
+#lmacgallery-search-form .form-item-sq > input {
+ 
+   -webkit-border-radius: 5px;
+   -moz-border-radius: 5px;
+   border-radius: 5px;
+   border-width: 2px !important;
+   padding: 5px;
+   border-color: #cccccc !important;
+   border-style: solid;
+}
+
+#lmacgallery-search-form input[type=submit] {
+   -webkit-border-radius: 5px;
+   -moz-border-radius: 5px;
+   border-radius: 5px;
+   border-width: 2px !important;
+   padding: 6px;
+   border-color: #cccccc !important;
+   border-style: solid;
+}
+
 
 #lmacg_modalExit {
 	font-size: 24px;
@@ -183,7 +210,7 @@
 }
 
 #lmacg_imagePage-image-container > img {
-	max-width: 100%;
+	width: 54%;
 }
 
 #lmacg_imagePage-info-container {
