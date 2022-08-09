@@ -1,5 +1,5 @@
 <div>
-   <p><?php print t('All images in the gallery are tagged so that they can be found using the appropriate search terms. The tags (search terms) that were used most often by the contributors of the images can be found in this cloud. Click a tag to search for it in the gallery.'); ?></p>
+   <p><?php print t('All images in the gallery are tagged so that they can be found using the appropriate search terms. The most frequently used tags (keywords) in the image library can be found in this cloud. Click a tag to search for it in the gallery.'); ?></p>
 </div>
 <div class="tags">
    <canvas id="tagCloudCanvas" width="800" height="300" style="width: 100%">

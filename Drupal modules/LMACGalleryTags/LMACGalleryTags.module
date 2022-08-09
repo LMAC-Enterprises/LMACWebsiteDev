@@ -45,10 +45,10 @@ function LMACGalleryTags_menu() {
 function LMACGalleryTags_permission() {
   return array(
     'view lmac_gallerytags' => array(
-      'title' => t('View LMAC Gallery')
+      'title' => t('View LMAC Gallery Tags')
     ),
     'administer lmac_gallerytags' => array(
-      'title' => t('View LMAC Gallery')
+      'title' => t('Administer LMAC Gallery Tags')
     )
   );
 }

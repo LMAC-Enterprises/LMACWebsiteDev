@@ -44,7 +44,7 @@ function _LMACGalleryTags_performSearchQuery() {
       q.push(jQuery(value).attr('data-tag'));
    });   
 
-   window.location.href='/lil-gallery/' + q.join(' ');
+   window.location.href='/lil-gallery/' + q.join(' ') + '?searchmode=mix';
    return;
 }
 
