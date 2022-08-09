@@ -45,24 +45,6 @@
         '#maxlength' => 200,
         '#required' => False
     );
- 
- 	$form['settings'] = array(
-		'#type' => 'fieldset',
-		'#title' => t('Settings'),
-		'#collapsible' => False,
-		'#collapsed' => False,  
-	); 
- 
-    $form['settings']['dapp'] = array(
-       '#type' => 'select',
-       '#title' => t('In which Dapp Hive links should open?'),
-       '#options' => array(
-			'https://peakd.com/' => 'PeakD',
-			'https://hive.blog/' => 'Hive Blog',
-			'https://ecency.com/' => 'Ecency'
-       ),
-       '#default_value' => variable_get('LMACGallery_dapp', 'https://hive.blog/')
-   );
 	
     $form['submit'] = array(
         '#type' 	=> 'submit',
@@ -117,6 +99,12 @@
 	
 	drupal_set_message('All ratings deleted.');
  }
+
+function _LMACGallery_admin_startsWith ($string, $startString)
+{
+    $len = strlen($startString);
+    return (substr($string, 0, $len) === $startString);
+}
  
  function _LMACGallery_getHideList($makeItemsLinks = False) {
 
@@ -126,6 +114,13 @@
 		$listToChange = $hideList;
 		$hideList = [];
 		foreach($listToChange as $hideListItem) {
+
+			if (_LMACGallery_admin_startsWith($hideListItem, 'https://images.hive.blog/0x0/')) {
+				$hideListItem = str_replace('https://images.hive.blog/0x0/', 'https://images.hive.blog/120x0/', $hideListItem);
+			}else{
+				$hideListItem = 'https://images.hive.blog/120x0/' . $hideListItem;
+			}
+
 			$hideList[] = "<a href=\"$hideListItem\" target=\"_blank\"><img src=\"$hideListItem\" width=\"120\"/></a>";
 		}
 	}
@@ -164,7 +159,7 @@
 	if (isset($form_state['values']['hidelist_items']) && !empty($form_state['values']['hidelist_items'])) {
 		_LMACGallery_deleteItemsFromHideList($form_state['values']['hidelist_items']);		
 	}
-	
-	variable_set('LMACGallery_dapp', $form_state['values']['dapp']);
+
+	drupal_set_message('All changes have been saved.');
 }
  

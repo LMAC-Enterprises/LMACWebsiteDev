@@ -34,7 +34,7 @@ lmacg_currentSiteState = {title: '', href: ''};
 		var imageBy = 'Image by ' + imagesData[imageId]['author'];
 		
 		$("#lmacg_modalImageLayer").show();
-		window.history.replaceState(imageBy, imageBy, '/lmac_gallery-image/' + imageId);
+		window.history.replaceState(imageBy, imageBy, '/lil-gallery-image/' + imageId);
 	}
 	
 	function _lmacg_getDappLinksHtml($author, $permlink, $suffix = '') {
@@ -48,13 +48,12 @@ lmacg_currentSiteState = {title: '', href: ''};
 	  
 		lmacg_currentSiteState.title = window.location.title;
 		lmacg_currentSiteState.href = window.location.pathname;
-		imagesData = JSON.parse(document.getElementById('imageDataJson').textContent);
+		imagesData = document.getElementById('imageDataJson') != null ? JSON.parse(document.getElementById('imageDataJson').textContent) : [];
 		  
 		$("#lmacgallery-search-form").submit(function(){
+		  $searchString = $("#edit-sq").val().replace(/[^0-9a-z\-, ]/gi, '').toLowerCase ();
 		  
-		  $searchString = $("#edit-sq").val().replace(/[^0-9a-z, ]/gi, '').toLowerCase ();
-		  
-		  window.location.href = '/lmac_gallery/' +  $searchString;
+		  window.location.href = '/lil-gallery/' +  $searchString;
 		  return false;
 		});
 			
@@ -139,7 +138,7 @@ lmacg_currentSiteState = {title: '', href: ''};
 				author = '@' + imagesData[currentImageId]['author'];
 			}
  
-			LMACDialogsController.openDialog('lmacGalleryDownloadInfo', {'downloadHref': imagesData[currentImageId]['url'], '@authorXY': author});
+			LMACDialogsController.openDialog('lmacGalleryDownloadInfo', {'#downloadHref': imagesData[currentImageId]['url'], '@authorXY': author, 'galleryImageUrl': 'http://lmac.gallery/lil-gallery-image/' + currentImageId});
 
 			return false;
 		});

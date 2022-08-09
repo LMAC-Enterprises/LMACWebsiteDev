@@ -5,7 +5,7 @@ jQuery(document).ready(function () {
 		
 		var image = Drupal.settings['LMACGalleryImage'];
 		
-		LMACDialogsController.openDialog('lmacGalleryDownloadInfo', {'authorXY': image['author'], 'downloadHref': image['url']});
+		LMACDialogsController.openDialog('lmacGalleryDownloadInfo', {'authorXY': image['author'], '#downloadHref': image['url'], 'galleryImageUrl': window.location.href});
 		return false;
 	});
 	

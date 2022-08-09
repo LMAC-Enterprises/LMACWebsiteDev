@@ -1,7 +1,7 @@
 <div id="lmacg_imagePage">
 	<div id="lmacg_imagePage-navigation">
-		<a href="/lmac_gallery" title=""><?php print t('Back to the gallery'); ?></a>
-		<a href="/lmac_gallery/<?php print $image['author']; ?>" title=""><?php print t('All images by !author.', array('!author'=>$image['author'])); ?></a>
+		<a href="/lil-gallery" title=""><?php print t('Back to the gallery'); ?></a>
+		<a href="/lil-gallery/<?php print $image['author']; ?>" title=""><?php print t('All images by !author.', array('!author'=>$image['author'])); ?></a>
 	</div>
 	<div id="lmacg_imagePage-image-container">
 	<img src="<?php print $image['url']; ?>" alt="<?php print t('!authors image is not available.', array('!author' => $image['author'])); ?>" />

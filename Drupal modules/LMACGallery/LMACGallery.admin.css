@@ -4,13 +4,27 @@
 
 #edit-hidelist-items > .form-type-checkbox {
 	display: inline-block;
+	vertical-align: top;
+	height: 120px;
+	overflow:hidden;
+	margin-bottom: 20px;
+	background-color: #c0c0c0;
 }
 
 #edit-hidelist-items > .form-type-checkbox > input[type=checkbox] {
 	height: 86px;
 	display: inline-block;
 	vertical-align: top;
-	background-color: #c0c0c0;
+}
+
+#edit-hidelist-items > .form-type-checkbox > label {
+	max-height: 120px;
+	display: inline-block;
+}
+
+#edit-hidelist-items img {
+	background-color: black;
+
 }
 
 #edit-ratings {

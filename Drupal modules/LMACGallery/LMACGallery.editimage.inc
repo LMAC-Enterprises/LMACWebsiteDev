@@ -55,6 +55,7 @@ function LMACGallery_admin_addImage_form($form, &$form_state) {
 		'#title' => t('Tags'),
 		'#description' => t('Comma separated tags/keywords.'),
 		'#default_value' => $imageDefaults['tags'],
+		'#maxlength' => 300
 	);
 	
 	$form['url'] = array(
@@ -100,6 +101,12 @@ function LMACGallery_admin_addImage_form($form, &$form_state) {
 		'#type' => 'submit',
 		'#value' => t('Save'),
 		'#submit' => array('LMACGallery_admin_addImageForm_submit')
+	);
+
+	$form['new_image'] = array(
+		'#type' => 'link',
+		'#title' => t('New image entry'),
+		'#href' => '/admin/lmac/lmacg-edit-image',
 	);
 
 	return $form;

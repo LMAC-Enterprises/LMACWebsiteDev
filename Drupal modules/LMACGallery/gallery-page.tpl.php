@@ -34,14 +34,8 @@ foreach($images as $image) {
 
 </div>
 
-<!-- OLD PAGINATION - WILL BE DELETED SOON <div class="lmacg_pagination clearfix">
-	<?php if ($pageNo != 0) { ?><a href="<?php print $firstPageUrl; ?>"><?php print t('First'); ?></a>&nbsp;&bull;&nbsp;<?php } ?>
-	<?php if ($pageNo > 0) { ?><a href="<?php print $previousPageUrl; ?>"><?php print t('Previous'); ?></a>&nbsp;&bull;&nbsp;<?php } ?>
-	<span>(<?php print ($pageNo + 1) . '/' . $pagesTotal; ?>)</span>&nbsp;&bull;&nbsp;
-	<?php if ($pageNo < $pagesTotal - 1) { ?><a href="<?php print $nextPageUrl; ?>"><?php print t('Next'); ?></a>&nbsp;&bull;&nbsp;<?php } ?>
-	<a href="<?php print $lastPageUrl; ?>"><?php print t('Last'); ?></a>
-</div> -->
 <?php print $pagination; ?> 
+
 <div id="lmacg_modalImageLayer">
 	<div id="lmacg_imageContainer"><img src="" /></div>
 	<div id="lmacg_dataContainer">	

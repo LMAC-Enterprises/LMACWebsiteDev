@@ -216,6 +216,7 @@ function LMACGallery_lmacDialogs() {
  */
 function LMACGallery_search_form($form, &$form_state){
  
+
     $form['page_welcome'] = array(
         '#type' => 'item',
         '#markup' => t('In this gallery you will find images that Hive users have diligently contributed to the LMAC Image Library.  Some images probably could not be read by the bot. If you can\'t find your images here, check the respective Hive posts for errors with the LIL Checker tool.'),
@@ -225,15 +226,13 @@ function LMACGallery_search_form($form, &$form_state){
 	
     $form['sq'] = array(
         '#type' => 'textfield',
-        '#title' => t('Search'),
-        '#size' => 50,
         '#maxlength' => 200,
         '#required' => FALSE
     );
     
     $form['submit'] = array(
         '#type' 	=> 'button',
-        '#value' 	=> t('Search')
+        '#value' 	=> t('Search'),
     );
 	
 	$form['description'] = array(
@@ -289,7 +288,16 @@ function LMACGallery_page($q="", $pageNo=0) {
 	drupal_add_js(drupal_get_path('module', 'LMACGallery').'/LMACGallery.js');
 	drupal_add_css(drupal_get_path('module', 'LMACGallery').'/LMACGallery.css');
  
-	$images = _LMACGallery_getImages(_LMACGallery_getSearchQueryFragments($q == ALL_IMAGES_QUERY_STRING ? '' : $q));
+   $searchMode = '';
+   switch(isset($_GET['searchmode']) ? $_GET['searchmode'] : '') {
+      case 'mix':
+         $searchMode = 'mix';
+         break;
+      default:
+         $searchMode = 'match';
+   }
+
+	$images = _LMACGallery_getImages(_LMACGallery_getSearchQueryFragments($q == ALL_IMAGES_QUERY_STRING ? '' : $q), $searchMode);
 	$imagesAmount = count($images);
 	if ($imagesAmount == 0) {
 		drupal_set_message(t('No images could be found for the requested search terms.'), 'error');
@@ -305,15 +313,15 @@ function LMACGallery_page($q="", $pageNo=0) {
 			
 		if ($pageNo >= count($chunks)) {
 			$pageNo = count($chunks) - 1;
-			drupal_set_message(t('Oh wow, you just tried to see into the future.  Thank you for the confidence, but we can\'t execute your order for reasons of international security.'), 'error'); 
+			drupal_set_message(t('Oh wow, you just tried to see into the future. Thank you for the confidence, but we can\'t execute your order for reasons of international security.'), 'error'); 
 		}
 	}	
-	
+
 	//$previousPageUrl = '/lil-gallery/' . $q . '/'. ($pageNo - 1);
 	//$nextPageUrl = '/lil-gallery/' .  $q . '/'. ($pageNo + 1);
 	//$firstPageUrl = '/lil-gallery/' . $q . '/0';
 	//$lastPageUrl = '/lil-gallery/' . $q . '/' . (count($chunks) - 1);
-   $pagination = _LMACGallery_renderPagination($q, $imagesAmount, $pageNo);
+   $pagination = _LMACGallery_renderPagination($q, $imagesAmount, $pageNo, $searchMode);
 	
 	return array(
 		'searchForm' => drupal_get_form('LMACGallery_search_form'),
@@ -329,6 +337,11 @@ function LMACGallery_page($q="", $pageNo=0) {
 	);
 }
 
+function _LMACGallery_paginationPageLink($searchQuery, $pageNo, $searchmode) {
+
+   return '/lil-gallery/' . $searchQuery . '/' . $pageNo . ($searchmode == 'match' ? '' : '?searchmode=' . $searchmode);
+}
+
 /**
  * Generates an HTML paginator.
  *
@@ -341,10 +354,11 @@ function LMACGallery_page($q="", $pageNo=0) {
  * @return
  *   The cache Id.
  */
-function _LMACGallery_renderPagination($searchQuery, $imagesAmount, $pageNo) {
+function _LMACGallery_renderPagination($searchQuery, $imagesAmount, $pageNo, $searchmode) {
+   
    $pageNo = intval($pageNo) > 0 ? $pageNo : 1;
    $links = 5;
-
+   $linkUrl = 
 
    $last       = ceil($imagesAmount / MAX_IMAGES_PER_PAGE) -1;
 
@@ -355,7 +369,7 @@ function _LMACGallery_renderPagination($searchQuery, $imagesAmount, $pageNo) {
 
    $class      = ($pageNo == 1 ) ? "disabled" : "";
    if ($pageNo > 1) {
-      $html       .= '<li class="' . $class . '"><a href="/lil-gallery/' . $searchQuery . '/' . ($pageNo - 1 ) . '">&laquo;</a></li>';
+      $html       .= '<li class="' . $class . '"><a href="' . _LMACGallery_paginationPageLink($searchQuery, ($pageNo - 1 ), $searchmode) . '">&laquo;</a></li>';
    }else{
       $html       .= '<li class="' . $class . '">&laquo;</li>';
    }
@@ -367,18 +381,18 @@ function _LMACGallery_renderPagination($searchQuery, $imagesAmount, $pageNo) {
 
    for ( $i = $start ; $i <= $end; $i++ ) {
      $class  = ($pageNo == $i ) ? "active" : "";
-     $html   .= '<li class="' . $class . '"><a href="/lil-gallery/' . $searchQuery . '/' . $i . '">' . $i . '</a></li>';
+     $html   .= '<li class="' . $class . '"><a href="' . _LMACGallery_paginationPageLink($searchQuery, $i, $searchmode) . '">' . $i . '</a></li>';
    }
 
    if ( $end < $last ) {
      $html   .= '<li class="disabled"><span>...</span></li>';
-     $html   .= '<li><a href="/lil-gallery/' . $searchQuery . '/'  . $last . '">' . $last . '</a></li>';
+     $html   .= '<li><a href="' . _LMACGallery_paginationPageLink($searchQuery, $last, $searchmode) . '">' . $last . '</a></li>';
    }
 
    if ($pageNo >= $last) {
       $html .= '<li class="disabled">&raquo;</li>';
    }else{
-      $html .= '<li><a href="/lil-gallery/' . $searchQuery . '/' . ($pageNo + 1) . '">&raquo;</a></li>';
+      $html .= '<li><a href="' . _LMACGallery_paginationPageLink($searchQuery, ($pageNo + 1), $searchmode). '">&raquo;</a></li>';
    }
 
    $html .= '</ul>';
@@ -396,9 +410,9 @@ function _LMACGallery_renderPagination($searchQuery, $imagesAmount, $pageNo) {
  * @return
  *   The cache Id.
  */
-function _LMACGallery_getCacheId($searchInputFragments) {
+function _LMACGallery_getCacheId($searchInputFragments, $searchMode) {
  
-	return 'LMACGallery_'.	str_replace(' ', '_', preg_replace('[^a-z0-9-_]', '', $searchInputFragments));
+	return 'LMACGallery_'.	str_replace(' ', '_', preg_replace('[^a-z0-9-_]', '', $searchInputFragments)) . '_' . $searchMode;
 }
 
 /**
@@ -430,11 +444,11 @@ function _LMACGallery_createImagesJson($images) {
  * @return
  *   An array of image entities.
  */
-function _LMACGallery_getImages($searchInputFragments) {
+function _LMACGallery_getImages($searchInputFragments, $searchMode) {
 	
 	$imageUrlHideList = variable_get('LMACGallery_hideList', array());
 	
-	$cacheId = _LMACGallery_getCacheId($searchInputFragments); 
+	$cacheId = _LMACGallery_getCacheId($searchInputFragments, $searchMode); 
 	$cache = cache_get($cacheId);
 	$cachedSearchResults = [];
 	if (! $cache) {
@@ -450,7 +464,7 @@ function _LMACGallery_getImages($searchInputFragments) {
  
  
 		if (! empty(trim($searchInputFragments))) {
-			_LMACGallery_dbFetchImagesByTags($query, $searchInputFragments);
+			_LMACGallery_dbFetchImagesByTags($query, $searchInputFragments, $searchMode);
 		}
 	 
 		$query->orderBy('ratingscore', 'DESC');
@@ -506,17 +520,25 @@ function _LMACGallery_getSearchQueryFragments($searchQuery, $wildcardMode = FALS
 
 		if (strlen($fragment) > 32) {
 			$fragment = substr($fragment, 0, 32);
-		}
-		
-		if ($wildcardMode) {
-			$safeFragments[] = $fragment . 's';
-		}
+		}		
 
-		$safeFragments[] = $fragment;
+		$safeFragments[] = '+' . $fragment;
 	}
 
-	
 	return implode(' ', $safeFragments);
+}
+
+/**
+ * Makes a sanitized version of a string.
+ *
+ * @param $inputString
+ *   The input string.
+ *
+ * @return
+ *   The sanitized version of the input string.
+ */
+function _LMACGallery_makeSanizizedString($inputString) {
+   return preg_replace("/[^A-Za-z0-9_\.\-]/", '', $inputString);
 }
 
 /**
@@ -530,16 +552,29 @@ function _LMACGallery_getSearchQueryFragments($searchQuery, $wildcardMode = FALS
  * @return
  *   Nothing
  */
-function _LMACGallery_dbFetchImagesByTags($query, $urlSearchQuery) {
- 
+function _LMACGallery_dbFetchImagesByTags($query, $urlSearchQuery, $searchMode) {
+
 	if (! empty($urlSearchQuery) && strlen($urlSearchQuery) > 256) {
 		$urlSearchQuery = substr($urlSearchQuery, 0, 256);
 	}
  
-	$expression = 'MATCH(li.tags, li.author) AGAINST (:search IN BOOLEAN MODE)';
-	$query->where($expression, [':search' => _LMACGallery_getSearchQueryFragments($urlSearchQuery, TRUE)]);
-}
+	$expression = '';
 
+   switch($searchMode) {
+      case 'mix':
+         $expression = 'MATCH(li.tags) AGAINST (:search) OR li.author=:cleanString';
+         break;
+
+      default:
+         $expression = 'MATCH(li.tags) AGAINST (:search IN BOOLEAN MODE) OR li.author=:cleanString';
+   }
+
+	$query->where($expression, [
+         ':search' => _LMACGallery_getSearchQueryFragments($urlSearchQuery, TRUE),
+         ':cleanString' => _LMACGallery_makeSanizizedString($urlSearchQuery)
+      ],
+   );
+}
 
 /**
  * Implements hook_lmacadmin_statistics.
